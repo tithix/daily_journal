@@ -300,8 +300,15 @@
             </div>
 
             <div class="flex justify-end space-x-3 mt-4">
-                <button id="exportData" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Exporter les données</button>
-                <button id="importData" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Importer les données</button>
+                <button id="exportData"
+                    class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Exporter
+                    les données</button>
+                <button id="importData"
+                    class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Importer
+                    les données</button>
+                <button id="deleteAllData"
+                    class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition">Supprimer
+                    les données</button>
                 <input type="file" id="importFileInput" accept="application/json" class="hidden">
             </div>
         </div>
@@ -318,8 +325,10 @@
                     </button>
                 </div>
                 <div class="mb-4">
-                    <label for="entryAsset" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Actif</label>
-                    <input type="text" id="entryAsset" class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
+                    <label for="entryAsset"
+                        class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Actif</label>
+                    <input type="text" id="entryAsset"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
                 </div>
                 <div class="mb-4">
                     <label for="entryText"
@@ -334,8 +343,10 @@
                         class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
                 </div>
                 <div class="mb-4">
-                    <label for="entryPL" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">P&L (USD)</label>
-                    <input type="number" id="entryPL" step="0.01" class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
+                    <label for="entryPL" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">P&L
+                        (USD)</label>
+                    <input type="number" id="entryPL" step="0.01"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
                 </div>
                 <div id="deleteEntryButton" class="mb-4 hidden">
                     <button class="text-red-600 dark:text-red-400 text-sm hover:underline">Supprimer l'entrée</button>
@@ -434,6 +445,7 @@
             const exportDataButton = document.getElementById('exportData'); // Export Data Button
             const importDataButton = document.getElementById('importData'); // Import Data Button
             const importFileInput = document.getElementById('importFileInput'); // Import File Input
+            const deleteAllDataButton = document.getElementById('deleteAllData'); // Delete All Data Button
 
             // --- State Variables ---
             let currentDisplayedDate = new Date();
@@ -706,6 +718,24 @@
                     } else {
                         entryContentDiv.innerHTML = '<p class="truncate text-night-600 dark:text-gray-400 italic">Aucune entrée</p>';
                     }
+
+                    const plElement = slotElement.querySelector('.pl-display');
+                    if (plElement) {
+                        plElement.remove(); // Clear previous P&L display
+                    }
+
+                    if (entry && entry.pl !== undefined) {
+                        const plDisplay = document.createElement('span');
+                        plDisplay.textContent = `$${entry.pl}`;
+                        plDisplay.style.color = '#a7c957';
+                        plDisplay.className = 'pl-display text-lg text-right font-medium ml-4';
+                        slotElement.querySelector('h3').appendChild(plDisplay);
+                    }
+
+                    const assetElement = slotElement.querySelector('.asset-display');
+                    if (assetElement) {
+                        assetElement.remove(); // Remove asset display
+                    }
                 });
 
 
@@ -883,9 +913,20 @@
                 displayModalNotes.textContent = '';
                 displayModalEmpty.classList.add('hidden');
 
+                // Clear any previously added P&L or asset elements
+                const previousPL = displayModalNotesContainer.previousElementSibling;
+                if (previousPL && previousPL.textContent.startsWith('P&L:')) {
+                    previousPL.remove();
+                }
+                const previousAsset = displayModalNotesContainer.previousElementSibling;
+                if (previousAsset && previousAsset.textContent.startsWith('Actif:')) {
+                    previousAsset.remove();
+                }
+
                 if (entry.asset) {
                     const assetElement = document.createElement('p');
                     assetElement.textContent = `Actif: ${escapeHTML(entry.asset)}`;
+                    assetElement.style.color = 'yellow';
                     assetElement.className = 'font-semibold';
                     displayModalNotesContainer.insertAdjacentElement('beforebegin', assetElement);
                 }
@@ -893,7 +934,7 @@
                 if (entry.pl !== undefined) {
                     const plElement = document.createElement('p');
                     plElement.textContent = `P&L: ${entry.pl} USD`;
-                    plElement.style.color = entry.pl < 0 ? 'red' : 'green';
+                    plElement.style.color = '#a7c957';
                     plElement.className = 'font-semibold';
                     displayModalNotesContainer.insertAdjacentElement('beforebegin', plElement);
                 }
@@ -917,7 +958,7 @@
                 }
 
                 // If somehow we got here with an empty entry (shouldn't happen with getEntry logic), show empty message
-                if (!entry.url && !entry.text && !entry.asset && entry.pl === undefined) {
+                if (!entry.url && !entry.text && entry.pl === undefined) {
                     displayModalEmpty.classList.remove('hidden');
                 }
 
@@ -987,6 +1028,14 @@
                         }
                     };
                     reader.readAsText(file);
+                }
+            });
+
+            document.getElementById('deleteAllData').addEventListener('click', () => {
+                if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
+                    localStorage.removeItem('journalEntries');
+                    alert('Toutes les données ont été supprimées.');
+                    location.reload(); // Reload to reflect deleted data
                 }
             });
 
