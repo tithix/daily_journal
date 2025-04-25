@@ -298,6 +298,12 @@
                     </div>
                 </div>
             </div>
+
+            <div class="flex justify-end space-x-3 mt-4">
+                <button id="exportData" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Exporter les données</button>
+                <button id="importData" class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Importer les données</button>
+                <input type="file" id="importFileInput" accept="application/json" class="hidden">
+            </div>
         </div>
 
         <div id="entryModal"
@@ -312,6 +318,10 @@
                     </button>
                 </div>
                 <div class="mb-4">
+                    <label for="entryAsset" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Actif</label>
+                    <input type="text" id="entryAsset" class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
+                </div>
+                <div class="mb-4">
                     <label for="entryText"
                         class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Notes</label>
                     <textarea id="entryText" rows="4"
@@ -322,6 +332,10 @@
                         (optionnel)</label>
                     <input type="url" id="entryUrl"
                         class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
+                </div>
+                <div class="mb-4">
+                    <label for="entryPL" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">P&L (USD)</label>
+                    <input type="number" id="entryPL" step="0.01" class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
                 </div>
                 <div id="deleteEntryButton" class="mb-4 hidden">
                     <button class="text-red-600 dark:text-red-400 text-sm hover:underline">Supprimer l'entrée</button>
@@ -399,6 +413,8 @@
             const modalTitle = document.getElementById('modalTitle'); // Edit Modal Title
             const entryTextarea = document.getElementById('entryText'); // Edit Modal Notes Input
             const entryUrlInput = document.getElementById('entryUrl'); // Edit Modal URL Input
+            const entryAssetInput = document.getElementById('entryAsset'); // Edit Modal Asset Input
+            const entryPLInput = document.getElementById('entryPL'); // Edit Modal P&L Input
             const deleteEntryButton = document.getElementById('deleteEntryButton'); // Edit Modal Delete Button
             const closeModalButton = document.getElementById('closeModal'); // Edit Modal Close Button
             const cancelEntryButton = document.getElementById('cancelEntry'); // Edit Modal Cancel Button
@@ -414,6 +430,10 @@
             const displayModalEmpty = document.getElementById('displayModalEmpty'); // Display Modal Empty State
             const closeDisplayModalButton = document.getElementById('closeDisplayModalButton'); // Display Modal Close Button (button in footer)
             const closeDisplayModalIcon = document.getElementById('closeDisplayModalIcon'); // Display Modal Close Icon
+
+            const exportDataButton = document.getElementById('exportData'); // Export Data Button
+            const importDataButton = document.getElementById('importData'); // Import Data Button
+            const importFileInput = document.getElementById('importFileInput'); // Import File Input
 
             // --- State Variables ---
             let currentDisplayedDate = new Date();
@@ -462,7 +482,7 @@
                 const entries = loadEntries();
                 const entry = entries[dateString]?.[slotKey];
                 // Return null if the entry object exists but is empty (no text and no url)
-                if (entry && !entry.text && !entry.url) {
+                if (entry && !entry.text && !entry.url && !entry.asset && entry.pl === undefined) {
                     return null;
                 }
                 return entry || null;
@@ -470,15 +490,15 @@
 
             /**
              * Sets or updates the entry for a specific date and time slot.
-             * Removes the entry if text and URL are empty.
+             * Removes the entry if text, URL, asset, and P&L are empty.
              * @param {string} dateString - Date in YYYY-MM-DD format.
              * @param {string} slotKey - Time slot key (e.g., '18-00').
-             * @param {object|null} data - The entry data { text: string, url: string } or null to delete.
+             * @param {object|null} data - The entry data { text: string, url: string, asset: string, pl: number } or null to delete.
              */
             function setEntry(dateString, slotKey, data) {
                 const entries = loadEntries();
 
-                if (!data || (!data.text && !data.url)) {
+                if (!data || (!data.text && !data.url && !data.asset && data.pl === undefined)) {
                     // If data is empty, delete the entry
                     if (entries[dateString]?.[slotKey]) {
                         delete entries[dateString][slotKey];
@@ -495,7 +515,9 @@
                     // Set or update the specific slot entry
                     entries[dateString][slotKey] = {
                         text: data.text || '', // Ensure text is stored even if empty
-                        url: data.url || ''   // Ensure url is stored even if empty
+                        url: data.url || '',   // Ensure url is stored even if empty
+                        asset: data.asset || '', // Ensure asset is stored even if empty
+                        pl: data.pl !== undefined ? data.pl : undefined // Ensure P&L is stored even if empty
                     };
                 }
 
@@ -512,9 +534,9 @@
                 const dateEntries = entries[dateString];
                 if (!dateEntries) return false;
 
-                // Check if any of the slot entries for this date have text or URL
+                // Check if any of the slot entries for this date have text, URL, asset, or P&L
                 for (const slotKey in dateEntries) {
-                    if (dateEntries[slotKey] && (dateEntries[slotKey].text || dateEntries[slotKey].url)) {
+                    if (dateEntries[slotKey] && (dateEntries[slotKey].text || dateEntries[slotKey].url || dateEntries[slotKey].asset || dateEntries[slotKey].pl !== undefined)) {
                         return true;
                     }
                 }
@@ -762,10 +784,14 @@
                 if (existingEntry) {
                     entryTextarea.value = existingEntry.text || '';
                     entryUrlInput.value = existingEntry.url || '';
+                    entryAssetInput.value = existingEntry.asset || '';
+                    entryPLInput.value = existingEntry.pl !== undefined ? existingEntry.pl : '';
                     deleteEntryButton.classList.remove('hidden');
                 } else {
                     entryTextarea.value = '';
                     entryUrlInput.value = '';
+                    entryAssetInput.value = '';
+                    entryPLInput.value = '';
                     deleteEntryButton.classList.add('hidden');
                 }
 
@@ -777,6 +803,8 @@
                 entryModal.classList.add('hidden');
                 entryTextarea.value = '';
                 entryUrlInput.value = '';
+                entryAssetInput.value = '';
+                entryPLInput.value = '';
                 editingTimeSlotKey = null;
                 deleteEntryButton.classList.add('hidden');
             }
@@ -794,8 +822,10 @@
                 const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 const entryText = entryTextarea.value.trim();
                 const entryUrl = entryUrlInput.value.trim();
+                const entryAsset = entryAssetInput.value.trim();
+                const entryPL = entryPLInput.value !== '' ? parseFloat(entryPLInput.value) : undefined;
 
-                setEntry(dateString, editingTimeSlotKey, { text: entryText, url: entryUrl });
+                setEntry(dateString, editingTimeSlotKey, { text: entryText, url: entryUrl, asset: entryAsset, pl: entryPL });
 
                 showTimeSlots(selectedDate); // Refresh cycle display
                 renderCalendar(); // Re-render calendar for dot update
@@ -853,6 +883,20 @@
                 displayModalNotes.textContent = '';
                 displayModalEmpty.classList.add('hidden');
 
+                if (entry.asset) {
+                    const assetElement = document.createElement('p');
+                    assetElement.textContent = `Actif: ${escapeHTML(entry.asset)}`;
+                    assetElement.className = 'font-semibold';
+                    displayModalNotesContainer.insertAdjacentElement('beforebegin', assetElement);
+                }
+
+                if (entry.pl !== undefined) {
+                    const plElement = document.createElement('p');
+                    plElement.textContent = `P&L: ${entry.pl} USD`;
+                    plElement.style.color = entry.pl < 0 ? 'red' : 'green';
+                    plElement.className = 'font-semibold';
+                    displayModalNotesContainer.insertAdjacentElement('beforebegin', plElement);
+                }
 
                 if (entry.url) {
                     displayModalUrlContainer.classList.remove('hidden');
@@ -873,10 +917,9 @@
                 }
 
                 // If somehow we got here with an empty entry (shouldn't happen with getEntry logic), show empty message
-                if (!entry.url && !entry.text) {
+                if (!entry.url && !entry.text && !entry.asset && entry.pl === undefined) {
                     displayModalEmpty.classList.remove('hidden');
                 }
-
 
                 displayModal.classList.remove('hidden');
             }
@@ -909,6 +952,43 @@
                 return div.innerHTML;
             }
 
+            // --- Export and Import Data ---
+            document.getElementById('exportData').addEventListener('click', () => {
+                const data = localStorage.getItem('journalEntries');
+                if (data) {
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'journal_entries.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    alert('Aucune donnée à exporter.');
+                }
+            });
+
+            document.getElementById('importData').addEventListener('click', () => {
+                document.getElementById('importFileInput').click();
+            });
+
+            document.getElementById('importFileInput').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            localStorage.setItem('journalEntries', JSON.stringify(importedData));
+                            alert('Données importées avec succès.');
+                            location.reload(); // Reload to reflect imported data
+                        } catch (error) {
+                            alert('Le fichier importé est invalide.');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
 
             // --- Initialization ---
             setInitialThemeIcon();
