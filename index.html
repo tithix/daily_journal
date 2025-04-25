@@ -78,7 +78,6 @@
 
         .dark .glass-card {
             background-color: rgba(15, 23, 42, 0.5);
-            /* Slightly lighter dark blue with transparency */
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
@@ -86,57 +85,43 @@
         .day-cell {
             transition: all 0.2s ease;
             position: relative;
-            /* Needed for the dot positioning */
             display: flex;
-            /* Center content */
             flex-direction: column;
-            /* Stack day number and dot */
             align-items: center;
-            /* Center horizontally */
             justify-content: center;
-            /* Vertically center */
             padding-top: 4px;
-            /* Add padding to make space for the dot */
         }
 
         .day-cell:hover:not(.empty) {
             transform: scale(1.05);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            /* Subtle shadow on hover */
         }
 
-        /* Dot for days with entries */
         .has-entry::after {
             content: '';
             position: absolute;
             bottom: 4px;
-            /* Adjust position based on padding */
             left: 50%;
             transform: translateX(-50%);
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background-color: #38bdf8;
-            /* Tailwind primary-400 */
         }
 
         .dark .has-entry::after {
             background-color: #0ea5e9;
-            /* Tailwind primary-500 */
         }
 
-        /* Time slot (Cycle) animations/effects */
         .time-slot {
             transition: all 0.2s ease;
             cursor: pointer;
         }
 
         .time-slot:hover {
-            /* Keep hover shadow as in original */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
-        /* Theme toggle effect */
         .theme-toggle {
             transition: all 0.3s ease;
         }
@@ -145,24 +130,19 @@
             transform: rotate(15deg);
         }
 
-        /* Ensure modals are full screen but content is centered */
         .modal-overlay {
             background-color: rgba(0, 0, 0, 0.5);
         }
 
-        /* Style for the month picker input */
         input[type="month"] {
-            /* Remove default browser styles if needed */
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            /* Add custom styles */
             background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>');
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
             background-size: 1.5em;
             padding-right: 2.5rem;
-            /* Make space for icon */
             cursor: pointer;
         }
 
@@ -170,12 +150,51 @@
             background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="24" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>');
         }
 
-        /* Style for displaying notes with line breaks */
         .notes-display {
             white-space: pre-wrap;
-            /* Respect line breaks and spaces */
             word-break: break-word;
-            /* Break long words */
+        }
+
+        /* Cycle icon styles */
+        .cycle-icon {
+            margin-right: 8px;
+            font-size: 12px;
+            vertical-align: middle;
+        }
+
+        .cycle-icon-c1 {
+            color: #6b7280; /* Gray-500 */
+        }
+
+        .cycle-icon-c2 {
+            color: #f87171; /* Red-400 */
+        }
+
+        .cycle-icon-c3 {
+            color: #3b82f6; /* Blue-500 */
+        }
+
+        .cycle-icon-c4 {
+            color: #4ade80; /* Green-400 */
+        }
+
+        /* Styles for buttons above cycles */
+        .cycle-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .cycle-buttons button {
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .cycle-buttons {
+                flex-direction: column;
+                align-items: flex-end;
+            }
         }
     </style>
 </head>
@@ -235,10 +254,24 @@
         <div id="timeSlotsSection" class="hidden glass-card rounded-2xl p-4 md:p-6 shadow-lg slide-up">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="selectedDateTitle" class="text-xl font-semibold text-primary-600 dark:text-primary-400"></h2>
-                <button id="closeTimeSlots" aria-label="Fermer les cycles"
-                    class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="flex items-center space-x-2">
+                    <div class="cycle-buttons">
+                        <button id="exportData"
+                            class="bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition">Exporter
+                            les données</button>
+                        <button id="importData"
+                            class="bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition">Importer
+                            les données</button>
+                        <button id="deleteAllData"
+                            class="bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition">Supprimer
+                            les données</button>
+                        <input type="file" id="importFileInput" accept="application/json" class="hidden">
+                    </div>
+                    <button id="closeTimeSlots" aria-label="Fermer les cycles"
+                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
 
             <div id="timeSlotsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -250,8 +283,9 @@
                             <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
                         </button>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2">18:00 - 00:00</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Soirée & Début de nuit</div>
+                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
+                            class="fas fa-circle cycle-icon cycle-icon-c1"></i>C1 (18:00-00:00)</h3>
+                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 1</div>
                     <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
                     </div>
                 </div>
@@ -264,8 +298,9 @@
                             <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
                         </button>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2">00:00 - 06:00</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Nuit profonde & Aube</div>
+                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
+                            class="fas fa-circle cycle-icon cycle-icon-c2"></i>C2 (00:00-06:00)</h3>
+                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 2</div>
                     <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
                     </div>
                 </div>
@@ -278,8 +313,9 @@
                             <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
                         </button>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2">06:00 - 12:00</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Matin</div>
+                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
+                            class="fas fa-circle cycle-icon cycle-icon-c3"></i>C3 (06:00-12:00)</h3>
+                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 3</div>
                     <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
                     </div>
                 </div>
@@ -292,24 +328,12 @@
                             <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
                         </button>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2">12:00 - 18:00</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Après-midi</div>
+                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
+                            class="fas fa-circle cycle-icon cycle-icon-c4"></i>C4 (12:00-18:00)</h3>
+                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 4</div>
                     <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
                     </div>
                 </div>
-            </div>
-
-            <div class="flex justify-end space-x-3 mt-4">
-                <button id="exportData"
-                    class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Exporter
-                    les données</button>
-                <button id="importData"
-                    class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">Importer
-                    les données</button>
-                <button id="deleteAllData"
-                    class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition">Supprimer
-                    les données</button>
-                <input type="file" id="importFileInput" accept="application/json" class="hidden">
             </div>
         </div>
 
@@ -370,7 +394,8 @@
             <div class="glass-card rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
                     <h3 id="displayModalTitle" class="text-lg font-semibold text-primary-600 dark:text-primary-400">
-                    </h3> <button id="closeDisplayModalIcon" aria-label="Fermer la modale d'affichage"
+                    </h3>
+                    <button id="closeDisplayModalIcon" aria-label="Fermer la modale d'affichage"
                         class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
                         <i class="fas fa-times"></i>
                     </button>
@@ -404,10 +429,8 @@
         Powered by 3drives
     </footer>
 
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- DOM Elements ---
             const themeToggle = document.getElementById('themeToggle');
             const currentMonthDisplay = document.getElementById('currentMonthDisplay');
             const monthDropdown = document.getElementById('monthDropdown');
@@ -416,137 +439,98 @@
             const prevMonthButton = document.getElementById('prevMonth');
             const nextMonthButton = document.getElementById('nextMonth');
             const calendarGrid = document.getElementById('calendarGrid');
-            const timeSlotsSection = document.getElementById('timeSlotsSection'); // Keeping ID but conceptually Cycles
+            const timeSlotsSection = document.getElementById('timeSlotsSection');
             const selectedDateTitle = document.getElementById('selectedDateTitle');
             const closeTimeSlotsButton = document.getElementById('closeTimeSlots');
-            const timeSlotsContainer = document.getElementById('timeSlotsContainer'); // Keeping ID but conceptually Cycles
-            const entryModal = document.getElementById('entryModal'); // Edit Modal
-            const modalTitle = document.getElementById('modalTitle'); // Edit Modal Title
-            const entryTextarea = document.getElementById('entryText'); // Edit Modal Notes Input
-            const entryUrlInput = document.getElementById('entryUrl'); // Edit Modal URL Input
-            const entryAssetInput = document.getElementById('entryAsset'); // Edit Modal Asset Input
-            const entryPLInput = document.getElementById('entryPL'); // Edit Modal P&L Input
-            const deleteEntryButton = document.getElementById('deleteEntryButton'); // Edit Modal Delete Button
-            const closeModalButton = document.getElementById('closeModal'); // Edit Modal Close Button
-            const cancelEntryButton = document.getElementById('cancelEntry'); // Edit Modal Cancel Button
-            const saveEntryButton = document.getElementById('saveEntry'); // Edit Modal Save Button
+            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            const entryModal = document.getElementById('entryModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const entryTextarea = document.getElementById('entryText');
+            const entryUrlInput = document.getElementById('entryUrl');
+            const entryAssetInput = document.getElementById('entryAsset');
+            const entryPLInput = document.getElementById('entryPL');
+            const deleteEntryButton = document.getElementById('deleteEntryButton');
+            const closeModalButton = document.getElementById('closeModal');
+            const cancelEntryButton = document.getElementById('cancelEntry');
+            const saveEntryButton = document.getElementById('saveEntry');
 
-            const displayModal = document.getElementById('displayModal'); // Display Modal
-            const displayModalTitle = document.getElementById('displayModalTitle'); // Display Modal Title
+            const displayModal = document.getElementById('displayModal');
+            const displayModalTitle = document.getElementById('displayModalTitle');
             const displayModalUrlContainer = document.getElementById('displayModalUrlContainer');
-            const displayModalUrl = document.getElementById('displayModalUrl'); // Display Modal URL Link
-            const displayModalUrlError = document.getElementById('displayModalUrlError'); // Display Modal Invalid URL Text
+            const displayModalUrl = document.getElementById('displayModalUrl');
+            const displayModalUrlError = document.getElementById('displayModalUrlError');
             const displayModalNotesContainer = document.getElementById('displayModalNotesContainer');
-            const displayModalNotes = document.getElementById('displayModalNotes'); // Display Modal Notes Text
-            const displayModalEmpty = document.getElementById('displayModalEmpty'); // Display Modal Empty State
-            const closeDisplayModalButton = document.getElementById('closeDisplayModalButton'); // Display Modal Close Button (button in footer)
-            const closeDisplayModalIcon = document.getElementById('closeDisplayModalIcon'); // Display Modal Close Icon
+            const displayModalNotes = document.getElementById('displayModalNotes');
+            const displayModalEmpty = document.getElementById('displayModalEmpty');
+            const closeDisplayModalButton = document.getElementById('closeDisplayModalButton');
+            const closeDisplayModalIcon = document.getElementById('closeDisplayModalIcon');
 
-            const exportDataButton = document.getElementById('exportData'); // Export Data Button
-            const importDataButton = document.getElementById('importData'); // Import Data Button
-            const importFileInput = document.getElementById('importFileInput'); // Import File Input
-            const deleteAllDataButton = document.getElementById('deleteAllData'); // Delete All Data Button
+            const exportDataButton = document.getElementById('exportData');
+            const importDataButton = document.getElementById('importData');
+            const importFileInput = document.getElementById('importFileInput');
+            const deleteAllDataButton = document.getElementById('deleteAllData');
 
-            // --- State Variables ---
             let currentDisplayedDate = new Date();
-            let selectedDate = null; // Holds the date currently shown in the time slots section
-            let editingTimeSlotKey = null; // Holds the key of the time slot being edited (e.g., '18-00')
+            let selectedDate = null;
+            let editingTimeSlotKey = null;
 
             const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             const STORAGE_KEY = 'journalEntries';
 
-            // --- Local Storage Data Handling ---
-
-            /**
-             * Loads all entries from localStorage.
-             * @returns {object} An object where keys are date strings (YYYY-MM-DD) and values are objects mapping time slot keys to entry data.
-             */
             function loadEntries() {
                 const data = localStorage.getItem(STORAGE_KEY);
                 try {
                     return data ? JSON.parse(data) : {};
                 } catch (e) {
                     console.error("Failed to parse data from localStorage", e);
-                    return {}; // Return empty object if parsing fails
+                    return {};
                 }
             }
 
-            /**
-             * Saves the entire entries object to localStorage.
-             * @param {object} entries - The entries object to save.
-             */
             function saveEntries(entries) {
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
                 } catch (e) {
                     console.error("Failed to save data to localStorage", e);
-                    // Potentially alert the user if storage is full
                 }
             }
 
-            /**
-            * Gets the entry for a specific date and time slot.
-            * @param {string} dateString - Date in YYYY-MM-DD format.
-            * @param {string} slotKey - Time slot key (e.g., '18-00').
-            * @returns {object|null} The entry object or null if no entry exists or is empty.
-            */
             function getEntry(dateString, slotKey) {
                 const entries = loadEntries();
                 const entry = entries[dateString]?.[slotKey];
-                // Return null if the entry object exists but is empty (no text and no url)
                 if (entry && !entry.text && !entry.url && !entry.asset && entry.pl === undefined) {
                     return null;
                 }
                 return entry || null;
             }
 
-            /**
-             * Sets or updates the entry for a specific date and time slot.
-             * Removes the entry if text, URL, asset, and P&L are empty.
-             * @param {string} dateString - Date in YYYY-MM-DD format.
-             * @param {string} slotKey - Time slot key (e.g., '18-00').
-             * @param {object|null} data - The entry data { text: string, url: string, asset: string, pl: number } or null to delete.
-             */
             function setEntry(dateString, slotKey, data) {
                 const entries = loadEntries();
-
                 if (!data || (!data.text && !data.url && !data.asset && data.pl === undefined)) {
-                    // If data is empty, delete the entry
                     if (entries[dateString]?.[slotKey]) {
                         delete entries[dateString][slotKey];
-                        // Clean up the date entry if it becomes empty
                         if (entries[dateString] && Object.keys(entries[dateString]).length === 0) {
                             delete entries[dateString];
                         }
                     }
                 } else {
-                    // Ensure date object exists
                     if (!entries[dateString]) {
                         entries[dateString] = {};
                     }
-                    // Set or update the specific slot entry
                     entries[dateString][slotKey] = {
-                        text: data.text || '', // Ensure text is stored even if empty
-                        url: data.url || '',   // Ensure url is stored even if empty
-                        asset: data.asset || '', // Ensure asset is stored even if empty
-                        pl: data.pl !== undefined ? data.pl : undefined // Ensure P&L is stored even if empty
+                        text: data.text || '',
+                        url: data.url || '',
+                        asset: data.asset || '',
+                        pl: data.pl !== undefined ? data.pl : undefined
                     };
                 }
-
                 saveEntries(entries);
             }
 
-            /**
-             * Checks if a specific date has any entries.
-             * @param {string} dateString - Date in YYYY-MM-DD format.
-             * @returns {boolean} True if the date has one or more non-empty entries, false otherwise.
-             */
             function dateHasEntries(dateString) {
                 const entries = loadEntries();
                 const dateEntries = entries[dateString];
                 if (!dateEntries) return false;
-
-                // Check if any of the slot entries for this date have text, URL, asset, or P&L
                 for (const slotKey in dateEntries) {
                     if (dateEntries[slotKey] && (dateEntries[slotKey].text || dateEntries[slotKey].url || dateEntries[slotKey].asset || dateEntries[slotKey].pl !== undefined)) {
                         return true;
@@ -555,11 +539,9 @@
                 return false;
             }
 
-            // --- Theme Toggle ---
             themeToggle.addEventListener('click', () => {
                 const isDarkMode = document.documentElement.classList.toggle('dark');
                 const icon = themeToggle.querySelector('i');
-
                 if (isDarkMode) {
                     icon.classList.replace('fa-moon', 'fa-sun');
                     if (icon.classList.contains('text-night-700')) {
@@ -595,60 +577,43 @@
                 picker.classList.toggle('dark', document.documentElement.classList.contains('dark'));
             }
 
-
-            // --- Calendar Rendering and Navigation ---
-
             function renderCalendar() {
                 const year = currentDisplayedDate.getFullYear();
                 const month = currentDisplayedDate.getMonth();
-
                 currentMonthDisplay.textContent = `${MONTH_NAMES[month]} ${year}`;
                 monthPicker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
-
-
                 const firstDayOfMonth = new Date(year, month, 1);
                 const lastDayOfMonth = new Date(year, month + 1, 0);
                 const daysInMonth = lastDayOfMonth.getDate();
                 const startingDayOfWeek = firstDayOfMonth.getDay();
-
-                calendarGrid.innerHTML = ''; // Clear previous days
-
+                calendarGrid.innerHTML = '';
                 for (let i = 0; i < startingDayOfWeek; i++) {
                     const emptyCell = document.createElement('div');
                     emptyCell.className = 'day-cell empty h-12 md:h-16 rounded-lg';
                     calendarGrid.appendChild(emptyCell);
                 }
-
                 const today = new Date();
                 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
                 for (let day = 1; day <= daysInMonth; day++) {
                     const dayCell = document.createElement('div');
                     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
                     dayCell.className = 'day-cell relative flex flex-col items-center justify-center h-12 md:h-16 rounded-lg bg-white dark:bg-night-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-night-700 transition';
                     dayCell.setAttribute('data-date', dateString);
-
                     if (dateString === todayString) {
                         dayCell.classList.add('border', 'border-primary-500', 'border-2');
                     }
-
                     if (dateHasEntries(dateString)) {
                         dayCell.classList.add('has-entry');
                     }
-
                     dayCell.innerHTML = `
                         <span class="text-sm font-medium">${day}</span>
                     `;
-
                     dayCell.addEventListener('click', () => {
                         document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('bg-primary-100', 'dark:bg-primary-800'));
                         dayCell.classList.add('bg-primary-100', 'dark:bg-primary-800');
-
                         selectedDate = new Date(year, month, day);
-                        showTimeSlots(selectedDate); // Keeping function name but it shows cycles
+                        showTimeSlots(selectedDate);
                     });
-
                     calendarGrid.appendChild(dayCell);
                 }
             }
@@ -685,45 +650,31 @@
                 }
             });
 
-
-            // --- Cycles Section ---
-
-            function showTimeSlots(date) { // Keeping name but displays Cycles
+            function showTimeSlots(date) {
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                // Changed title text
                 selectedDateTitle.textContent = `Cycles du ${date.toLocaleDateString('fr-FR', options)}`;
-
                 const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
                 const dateEntries = loadEntries()[dateString] || {};
-
                 timeSlotsContainer.querySelectorAll('.time-slot').forEach(slotElement => {
                     const slotKey = slotElement.getAttribute('data-slot-key');
                     const entryContentDiv = slotElement.querySelector('.entry-content');
                     const entry = dateEntries[slotKey];
-
-                    entryContentDiv.innerHTML = ''; // Clear previous content
-
-                    // Check if entry exists AND has content
+                    entryContentDiv.innerHTML = '';
                     if (entry && (entry.text || entry.url)) {
                         if (entry.text) {
-                            // Display a truncated preview of the text
                             const textPreview = entry.text.split('\n')[0].substring(0, 50) + (entry.text.length > 50 || entry.text.includes('\n') ? '...' : '');
                             entryContentDiv.innerHTML += `<p class="truncate font-semibold">${escapeHTML(textPreview)}</p>`;
                         }
                         if (entry.url) {
-                            // Display the URL if present
                             entryContentDiv.innerHTML += `<p class="text-primary-600 dark:text-primary-400 text-xs block truncate">URL enregistrée</p>`;
                         }
                     } else {
                         entryContentDiv.innerHTML = '<p class="truncate text-night-600 dark:text-gray-400 italic">Aucune entrée</p>';
                     }
-
                     const plElement = slotElement.querySelector('.pl-display');
                     if (plElement) {
-                        plElement.remove(); // Clear previous P&L display
+                        plElement.remove();
                     }
-
                     if (entry && entry.pl !== undefined) {
                         const plDisplay = document.createElement('span');
                         plDisplay.textContent = `$${entry.pl}`;
@@ -731,20 +682,15 @@
                         plDisplay.className = 'pl-display text-lg text-right font-medium ml-4';
                         slotElement.querySelector('h3').appendChild(plDisplay);
                     }
-
                     const assetElement = slotElement.querySelector('.asset-display');
                     if (assetElement) {
-                        assetElement.remove(); // Remove asset display
+                        assetElement.remove();
                     }
                 });
-
-
                 timeSlotsSection.classList.remove('hidden');
-
                 setTimeout(() => {
                     timeSlotsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 50);
-
             }
 
             closeTimeSlotsButton.addEventListener('click', () => {
@@ -753,63 +699,40 @@
                 document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('bg-primary-100', 'dark:bg-primary-800'));
             });
 
-            // Add event listeners to each time slot (Cycle)
             timeSlotsContainer.querySelectorAll('.time-slot').forEach(slotElement => {
-                // Listen for clicks on the slot itself (for display or edit if no data)
                 slotElement.addEventListener('click', (e) => {
-                    // Get the slot key and current date string
                     const slotKey = slotElement.getAttribute('data-slot-key');
-                    if (!selectedDate) return; // Should not happen if section is visible
+                    if (!selectedDate) return;
                     const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-
-                    // Check if an entry exists for this slot and date
                     const entry = getEntry(dateString, slotKey);
-
-                    // If click is NOT on the edit button AND an entry exists, show display modal
                     if (!e.target.closest('.edit-slot') && entry) {
-                        showEntryDetails(dateString, slotKey, slotElement.querySelector('h3').textContent); // Pass date, key, and time range text
-                    }
-                    // If click is NOT on the edit button AND NO entry exists, open edit modal
-                    else if (!e.target.closest('.edit-slot') && !entry) {
+                        showEntryDetails(dateString, slotKey, slotElement.querySelector('h3').textContent);
+                    } else if (!e.target.closest('.edit-slot') && !entry) {
                         openEntryModal(slotElement);
-                    }
-                    // If click IS on the edit button, always open edit modal
-                    else if (e.target.closest('.edit-slot')) {
+                    } else if (e.target.closest('.edit-slot')) {
                         openEntryModal(slotElement);
                     }
                 });
-
-                // Listen for clicks specifically on the edit button (redundant with above but safer)
                 const editButton = slotElement.querySelector('.edit-slot');
                 if (editButton) {
                     editButton.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent the click from bubbling up to the parent time-slot
+                        e.stopPropagation();
                         openEntryModal(slotElement);
                     });
                 }
             });
 
-
-            // --- Entry Modal (Editing) ---
-
             function openEntryModal(timeSlotElement) {
                 const slotKey = timeSlotElement.getAttribute('data-slot-key');
                 const timeRange = timeSlotElement.querySelector('h3').textContent;
-
                 if (!selectedDate) {
                     console.error("No date selected for editing time slot.");
                     return;
                 }
-
                 const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-
                 editingTimeSlotKey = slotKey;
-
-                // Set modal title to show the cycle and date
                 const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
                 modalTitle.textContent = `Entrée pour le cycle ${timeRange} du ${selectedDate.toLocaleDateString('fr-FR', dateOptions)}`;
-
-
                 const existingEntry = getEntry(dateString, slotKey);
                 if (existingEntry) {
                     entryTextarea.value = existingEntry.text || '';
@@ -824,7 +747,6 @@
                     entryPLInput.value = '';
                     deleteEntryButton.classList.add('hidden');
                 }
-
                 entryModal.classList.remove('hidden');
                 entryTextarea.focus();
             }
@@ -848,18 +770,14 @@
                     closeEntryModal();
                     return;
                 }
-
                 const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 const entryText = entryTextarea.value.trim();
                 const entryUrl = entryUrlInput.value.trim();
                 const entryAsset = entryAssetInput.value.trim();
                 const entryPL = entryPLInput.value !== '' ? parseFloat(entryPLInput.value) : undefined;
-
                 setEntry(dateString, editingTimeSlotKey, { text: entryText, url: entryUrl, asset: entryAsset, pl: entryPL });
-
-                showTimeSlots(selectedDate); // Refresh cycle display
-                renderCalendar(); // Re-render calendar for dot update
-
+                showTimeSlots(selectedDate);
+                renderCalendar();
                 closeEntryModal();
             });
 
@@ -870,41 +788,29 @@
                     closeEntryModal();
                     return;
                 }
-
                 const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-
-                setEntry(dateString, editingTimeSlotKey, null); // Delete
-
-                showTimeSlots(selectedDate); // Refresh cycle display
-                renderCalendar(); // Re-render calendar for dot update
-
+                setEntry(dateString, editingTimeSlotKey, null);
+                showTimeSlots(selectedDate);
+                renderCalendar();
                 closeEntryModal();
             });
 
-
-            // --- Display Modal (Viewing) ---
-
             function showEntryDetails(dateString, slotKey, timeRangeText) {
                 const entry = getEntry(dateString, slotKey);
-
                 if (!entry) {
                     console.warn("Attempted to display empty entry.");
-                    displayModalEmpty.classList.remove('hidden'); // Ensure empty message is shown
+                    displayModalEmpty.classList.remove('hidden');
                     displayModalUrlContainer.classList.add('hidden');
                     displayModalNotesContainer.classList.add('hidden');
-                    // Fallback title
                     const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
                     const date = new Date(dateString + 'T12:00:00');
                     displayModalTitle.textContent = `Cycle ${timeRangeText} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
                     displayModal.classList.remove('hidden');
                     return;
                 }
-
                 const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                const date = new Date(dateString + 'T12:00:00'); // Use midday to avoid timezone issues
+                const date = new Date(dateString + 'T12:00:00');
                 displayModalTitle.textContent = `Cycle ${timeRangeText} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
-
-                // Clear previous state
                 displayModalUrlContainer.classList.add('hidden');
                 displayModalUrl.href = '#';
                 displayModalUrl.textContent = '';
@@ -912,8 +818,6 @@
                 displayModalNotesContainer.classList.add('hidden');
                 displayModalNotes.textContent = '';
                 displayModalEmpty.classList.add('hidden');
-
-                // Clear any previously added P&L or asset elements
                 const previousPL = displayModalNotesContainer.previousElementSibling;
                 if (previousPL && previousPL.textContent.startsWith('P&L:')) {
                     previousPL.remove();
@@ -922,7 +826,6 @@
                 if (previousAsset && previousAsset.textContent.startsWith('Actif:')) {
                     previousAsset.remove();
                 }
-
                 if (entry.asset) {
                     const assetElement = document.createElement('p');
                     assetElement.textContent = `Actif: ${escapeHTML(entry.asset)}`;
@@ -930,7 +833,6 @@
                     assetElement.className = 'font-semibold';
                     displayModalNotesContainer.insertAdjacentElement('beforebegin', assetElement);
                 }
-
                 if (entry.pl !== undefined) {
                     const plElement = document.createElement('p');
                     plElement.textContent = `P&L: ${entry.pl} USD`;
@@ -938,62 +840,51 @@
                     plElement.className = 'font-semibold';
                     displayModalNotesContainer.insertAdjacentElement('beforebegin', plElement);
                 }
-
                 if (entry.url) {
                     displayModalUrlContainer.classList.remove('hidden');
                     try {
-                        new URL(entry.url); // Validate URL format
+                        new URL(entry.url);
                         displayModalUrl.href = escapeHTML(entry.url);
                         displayModalUrl.textContent = escapeHTML(entry.url);
                     } catch (e) {
-                        displayModalUrl.href = '#'; // Make it non-clickable
-                        displayModalUrl.textContent = escapeHTML(entry.url); // Display invalid URL as text
+                        displayModalUrl.href = '#';
+                        displayModalUrl.textContent = escapeHTML(entry.url);
                         displayModalUrlError.classList.remove('hidden');
                     }
                 }
-
                 if (entry.text) {
                     displayModalNotesContainer.classList.remove('hidden');
-                    displayModalNotes.textContent = escapeHTML(entry.text); // Use textContent to preserve line breaks with white-space: pre-wrap
+                    displayModalNotes.textContent = escapeHTML(entry.text);
                 }
-
-                // If somehow we got here with an empty entry (shouldn't happen with getEntry logic), show empty message
                 if (!entry.url && !entry.text && entry.pl === undefined) {
                     displayModalEmpty.classList.remove('hidden');
                 }
-
                 displayModal.classList.remove('hidden');
             }
 
             function closeDisplayModal() {
                 displayModal.classList.add('hidden');
-                // Clear content (optional, as it's overwritten next time)
                 displayModalUrl.href = '#';
                 displayModalUrl.textContent = '';
                 displayModalNotes.textContent = '';
                 displayModalUrlError.classList.add('hidden');
             }
 
-            // Event listeners for closing display modal
-            closeDisplayModalButton.addEventListener('click', closeDisplayModal); // Button in footer
-            closeDisplayModalIcon.addEventListener('click', closeDisplayModal); // Icon in header
-            // Optional: Close display modal by clicking outside (on the overlay)
+            closeDisplayModalButton.addEventListener('click', closeDisplayModal);
+            closeDisplayModalIcon.addEventListener('click', closeDisplayModal);
             displayModal.addEventListener('click', (e) => {
-                if (e.target === displayModal) { // Check if the click is directly on the overlay
+                if (e.target === displayModal) {
                     closeDisplayModal();
                 }
             });
 
-
-            // Helper function to escape HTML for displaying user input safely
             function escapeHTML(str) {
-                if (typeof str !== 'string') return ''; // Handle non-string inputs
+                if (typeof str !== 'string') return '';
                 const div = document.createElement('div');
                 div.appendChild(document.createTextNode(str));
                 return div.innerHTML;
             }
 
-            // --- Export and Import Data ---
             document.getElementById('exportData').addEventListener('click', () => {
                 const data = localStorage.getItem('journalEntries');
                 if (data) {
@@ -1022,7 +913,7 @@
                             const importedData = JSON.parse(e.target.result);
                             localStorage.setItem('journalEntries', JSON.stringify(importedData));
                             alert('Données importées avec succès.');
-                            location.reload(); // Reload to reflect imported data
+                            location.reload();
                         } catch (error) {
                             alert('Le fichier importé est invalide.');
                         }
@@ -1035,15 +926,15 @@
                 if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
                     localStorage.removeItem('journalEntries');
                     alert('Toutes les données ont été supprimées.');
-                    location.reload(); // Reload to reflect deleted data
+                    location.reload();
                 }
             });
 
-            // --- Initialization ---
             setInitialThemeIcon();
             renderCalendar();
         });
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93604dd80f8aafb6',t:'MTc0NTYwOTk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 
 </html>
