@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Journal</title>
+    <link rel="icon" type="image/png" href="https://toppng.com/uploads/preview/android-journal-app-icon-bing-circle-logo-11563355473apgysgmnl7.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -364,7 +365,7 @@
                     <label for="entryUrl" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">URL
                         (optionnel)</label>
                     <input type="url" id="entryUrl"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
+                        class="w-full px-3 py-2 border border-gray-300 dark theynclude dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
                 </div>
                 <div class="mb-4">
                     <label for="entryPL" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">P&L
@@ -539,6 +540,12 @@
                 return false;
             }
 
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
             themeToggle.addEventListener('click', () => {
                 const isDarkMode = document.documentElement.classList.toggle('dark');
                 const icon = themeToggle.querySelector('i');
@@ -686,6 +693,13 @@
                     if (assetElement) {
                         assetElement.remove();
                     }
+                    if (entry && entry.asset) {
+                        const assetDisplay = document.createElement('span');
+                        assetDisplay.textContent = entry.asset;
+                        assetDisplay.style.color = '#f4d35e';
+                        assetDisplay.className = 'asset-display text-lg font-medium ml-4';
+                        slotElement.querySelector('h3').appendChild(assetDisplay);
+                    }
                 });
                 timeSlotsSection.classList.remove('hidden');
                 setTimeout(() => {
@@ -709,8 +723,6 @@
                         showEntryDetails(dateString, slotKey, slotElement.querySelector('h3').textContent);
                     } else if (!e.target.closest('.edit-slot') && !entry) {
                         openEntryModal(slotElement);
-                    } else if (e.target.closest('.edit-slot')) {
-                        openEntryModal(slotElement);
                     }
                 });
                 const editButton = slotElement.querySelector('.edit-slot');
@@ -721,6 +733,56 @@
                     });
                 }
             });
+
+            function showEntryDetails(dateString, slotKey, timeRange) {
+                const entry = getEntry(dateString, slotKey);
+                const date = new Date(dateString);
+                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+                displayModalTitle.textContent = `Entrée pour ${timeRange} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
+                displayModalUrlContainer.classList.add('hidden');
+                displayModalNotesContainer.classList.add('hidden');
+                displayModalEmpty.classList.add('hidden');
+                displayModalUrlError.classList.add('hidden');
+
+                let hasContent = false;
+
+                if (entry) {
+                    if (entry.asset) {
+                        displayModalNotesContainer.classList.remove('hidden');
+                        displayModalNotes.innerHTML = `<span style="color: #f4d35e;">Actif: ${escapeHTML(entry.asset)}</span>`;
+                        hasContent = true;
+                    }
+                    if (entry.pl !== undefined) {
+                        displayModalNotesContainer.classList.remove('hidden');
+                        displayModalNotes.innerHTML += `${entry.asset ? '<br>' : ''}<span style="color: #a7c957;">P&L: $${entry.pl}</span>`;
+                        hasContent = true;
+                    }
+                    if (entry.url) {
+                        displayModalUrlContainer.classList.remove('hidden');
+                        try {
+                            const url = new URL(entry.url);
+                            displayModalUrl.href = escapeHTML(entry.url);
+                            displayModalUrl.textContent = escapeHTML(entry.url);
+                        } catch (e) {
+                            displayModalUrl.href = '#';
+                            displayModalUrl.textContent = escapeHTML(entry.url);
+                            displayModalUrlError.classList.remove('hidden');
+                        }
+                        hasContent = true;
+                    }
+                    if (entry.text) {
+                        displayModalNotesContainer.classList.remove('hidden');
+                        displayModalNotes.innerHTML += `${(entry.asset || entry.pl !== undefined) ? '<br>' : ''}${escapeHTML(entry.text)}`;
+                        hasContent = true;
+                    }
+                }
+
+                if (!hasContent) {
+                    displayModalEmpty.classList.remove('hidden');
+                }
+
+                displayModal.classList.remove('hidden');
+            }
 
             function openEntryModal(timeSlotElement) {
                 const slotKey = timeSlotElement.getAttribute('data-slot-key');
@@ -781,8 +843,7 @@
                 closeEntryModal();
             });
 
-            deleteEntryButton.addEventListener('click', (e) => {
-                e.preventDefault();
+            deleteEntryButton.addEventListener('click', () => {
                 if (!selectedDate || !editingTimeSlotKey) {
                     console.error("Delete called without selected date or time slot key.");
                     closeEntryModal();
@@ -795,138 +856,67 @@
                 closeEntryModal();
             });
 
-            function showEntryDetails(dateString, slotKey, timeRangeText) {
-                const entry = getEntry(dateString, slotKey);
-                if (!entry) {
-                    console.warn("Attempted to display empty entry.");
-                    displayModalEmpty.classList.remove('hidden');
-                    displayModalUrlContainer.classList.add('hidden');
-                    displayModalNotesContainer.classList.add('hidden');
-                    const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                    const date = new Date(dateString + 'T12:00:00');
-                    displayModalTitle.textContent = `Cycle ${timeRangeText} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
-                    displayModal.classList.remove('hidden');
-                    return;
-                }
-                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                const date = new Date(dateString + 'T12:00:00');
-                displayModalTitle.textContent = `Cycle ${timeRangeText} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
-                displayModalUrlContainer.classList.add('hidden');
-                displayModalUrl.href = '#';
-                displayModalUrl.textContent = '';
-                displayModalUrlError.classList.add('hidden');
-                displayModalNotesContainer.classList.add('hidden');
-                displayModalNotes.textContent = '';
-                displayModalEmpty.classList.add('hidden');
-                const previousPL = displayModalNotesContainer.previousElementSibling;
-                if (previousPL && previousPL.textContent.startsWith('P&L:')) {
-                    previousPL.remove();
-                }
-                const previousAsset = displayModalNotesContainer.previousElementSibling;
-                if (previousAsset && previousAsset.textContent.startsWith('Actif:')) {
-                    previousAsset.remove();
-                }
-                if (entry.asset) {
-                    const assetElement = document.createElement('p');
-                    assetElement.textContent = `Actif: ${escapeHTML(entry.asset)}`;
-                    assetElement.style.color = 'yellow';
-                    assetElement.className = 'font-semibold';
-                    displayModalNotesContainer.insertAdjacentElement('beforebegin', assetElement);
-                }
-                if (entry.pl !== undefined) {
-                    const plElement = document.createElement('p');
-                    plElement.textContent = `P&L: ${entry.pl} USD`;
-                    plElement.style.color = '#a7c957';
-                    plElement.className = 'font-semibold';
-                    displayModalNotesContainer.insertAdjacentElement('beforebegin', plElement);
-                }
-                if (entry.url) {
-                    displayModalUrlContainer.classList.remove('hidden');
-                    try {
-                        new URL(entry.url);
-                        displayModalUrl.href = escapeHTML(entry.url);
-                        displayModalUrl.textContent = escapeHTML(entry.url);
-                    } catch (e) {
-                        displayModalUrl.href = '#';
-                        displayModalUrl.textContent = escapeHTML(entry.url);
-                        displayModalUrlError.classList.remove('hidden');
-                    }
-                }
-                if (entry.text) {
-                    displayModalNotesContainer.classList.remove('hidden');
-                    displayModalNotes.textContent = escapeHTML(entry.text);
-                }
-                if (!entry.url && !entry.text && entry.pl === undefined) {
-                    displayModalEmpty.classList.remove('hidden');
-                }
-                displayModal.classList.remove('hidden');
-            }
-
-            function closeDisplayModal() {
+            closeDisplayModalButton.addEventListener('click', () => {
                 displayModal.classList.add('hidden');
-                displayModalUrl.href = '#';
-                displayModalUrl.textContent = '';
-                displayModalNotes.textContent = '';
-                displayModalUrlError.classList.add('hidden');
-            }
-
-            closeDisplayModalButton.addEventListener('click', closeDisplayModal);
-            closeDisplayModalIcon.addEventListener('click', closeDisplayModal);
-            displayModal.addEventListener('click', (e) => {
-                if (e.target === displayModal) {
-                    closeDisplayModal();
-                }
             });
 
-            function escapeHTML(str) {
-                if (typeof str !== 'string') return '';
-                const div = document.createElement('div');
-                div.appendChild(document.createTextNode(str));
-                return div.innerHTML;
-            }
-
-            document.getElementById('exportData').addEventListener('click', () => {
-                const data = localStorage.getItem('journalEntries');
-                if (data) {
-                    const blob = new Blob([data], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'journal_entries.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                } else {
-                    alert('Aucune donnée à exporter.');
-                }
+            closeDisplayModalIcon.addEventListener('click', () => {
+                displayModal.classList.add('hidden');
             });
 
-            document.getElementById('importData').addEventListener('click', () => {
-                document.getElementById('importFileInput').click();
+            exportDataButton.addEventListener('click', () => {
+                const entries = loadEntries();
+                const dataStr = JSON.stringify(entries, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `journal_entries_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
             });
 
-            document.getElementById('importFileInput').addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const importedData = JSON.parse(e.target.result);
-                            localStorage.setItem('journalEntries', JSON.stringify(importedData));
-                            alert('Données importées avec succès.');
-                            location.reload();
-                        } catch (error) {
-                            alert('Le fichier importé est invalide.');
+            importDataButton.addEventListener('click', () => {
+                importFileInput.click();
+            });
+
+            importFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        const currentData = loadEntries();
+                        const mergedData = { ...currentData, ...importedData };
+                        for (const date in mergedData) {
+                            if (currentData[date] && importedData[date]) {
+                                mergedData[date] = { ...currentData[date], ...importedData[date] };
+                            }
                         }
-                    };
-                    reader.readAsText(file);
-                }
+                        saveEntries(mergedData);
+                        if (selectedDate) {
+                            showTimeSlots(selectedDate);
+                        }
+                        renderCalendar();
+                        alert('Données importées avec succès.');
+                    } catch (error) {
+                        console.error('Erreur lors de l\'importation des données:', error);
+                        alert('Erreur lors de l\'importation des données. Veuillez vérifier le format du fichier.');
+                    }
+                    e.target.value = '';
+                };
+                reader.readAsText(file);
             });
 
-            document.getElementById('deleteAllData').addEventListener('click', () => {
+            deleteAllDataButton.addEventListener('click', () => {
                 if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
-                    localStorage.removeItem('journalEntries');
+                    localStorage.removeItem(STORAGE_KEY);
+                    if (selectedDate) {
+                        showTimeSlots(selectedDate);
+                    }
+                    renderCalendar();
                     alert('Toutes les données ont été supprimées.');
-                    location.reload();
                 }
             });
 
@@ -934,7 +924,6 @@
             renderCalendar();
         });
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93604dd80f8aafb6',t:'MTc0NTYwOTk0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 
 </html>
