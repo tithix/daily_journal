@@ -1,929 +1,2099 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Journal</title>
-    <link rel="icon" type="image/png" href="https://toppng.com/uploads/preview/android-journal-app-icon-bing-circle-logo-11563355473apgysgmnl7.png">
+    <title>Price Action Journal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            200: '#bae6fd',
-                            300: '#7dd3fc',
-                            400: '#38bdf8',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        },
-                        night: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            300: '#cbd5e1',
-                            400: '#94a3b8',
-                            500: '#64748b',
-                            600: '#475569',
-                            700: '#334155',
-                            800: '#1e293b',
+                        dark: {
                             900: '#0f172a',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.3s ease-in-out',
-                        'slide-up': 'slideUp 0.3s ease-out',
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(10px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                            800: '#1e293b',
+                            700: '#334155',
+                            600: '#475569',
+                            500: '#64748b',
                         }
                     }
                 }
             }
         }
     </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
         body {
-            font-family: 'Inter', system-ui, sans-serif;
             transition: background-color 0.3s ease;
         }
 
-        /* Glassmorphism styles */
-        .glass-card {
-            backdrop-filter: blur(16px) saturate(180%);
-            -webkit-backdrop-filter: blur(16px) saturate(180%);
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.125);
-        }
-
-        .dark .glass-card {
-            background-color: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        /* Day cell animations/effects */
-        .day-cell {
-            transition: all 0.2s ease;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding-top: 4px;
-        }
-
-        .day-cell:hover:not(.empty) {
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .has-entry::after {
-            content: '';
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #38bdf8;
-        }
-
-        .dark .has-entry::after {
-            background-color: #0ea5e9;
-        }
-
-        .time-slot {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .time-slot:hover {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        .theme-toggle {
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(15deg);
-        }
-
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        input[type="month"] {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.5em;
-            padding-right: 2.5rem;
-            cursor: pointer;
-        }
-
-        .dark input[type="month"] {
-            background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="24" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><rect height="18" rx="2" ry="2" width="18" x="3" y="4"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>');
-        }
-
-        .notes-display {
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        /* Cycle icon styles */
-        .cycle-icon {
-            margin-right: 8px;
-            font-size: 12px;
-            vertical-align: middle;
-        }
-
-        .cycle-icon-c1 {
-            color: #6b7280; /* Gray-500 */
-        }
-
-        .cycle-icon-c2 {
-            color: #f87171; /* Red-400 */
-        }
-
-        .cycle-icon-c3 {
-            color: #3b82f6; /* Blue-500 */
-        }
-
-        .cycle-icon-c4 {
-            color: #4ade80; /* Green-400 */
-        }
-
-        /* Styles for buttons above cycles */
-        .cycle-buttons {
+        .tag-input-container {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
+            align-items: center;
+            padding: 0.5rem;
+            border: 1px solid #334155;
+            border-radius: 0.375rem;
+            min-height: 2.5rem;
+            background-color: #1e293b;
         }
 
-        .cycle-buttons button {
-            font-size: 0.75rem;
-            padding: 0.5rem 0.75rem;
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #334155;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            color: #e2e8f0;
         }
 
-        @media (max-width: 640px) {
-            .cycle-buttons {
-                flex-direction: column;
-                align-items: flex-end;
+        .tag-remove {
+            margin-left: 0.25rem;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .tag-input {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            min-width: 100px;
+            background-color: transparent;
+            color: white;
+        }
+
+        .journal-entry {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .journal-entry:hover {
+            transform: translateY(-2px);
+            border-left-color: #3b82f6;
+        }
+
+        .image-preview {
+            transition: all 0.3s ease;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.03);
+        }
+
+        .time-range-btn {
+            transition: all 0.2s ease;
+        }
+
+        .time-range-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .glow {
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .chart-type-tab {
+            transition: all 0.2s ease;
+        }
+
+        .chart-type-tab.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .chart-preview {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e293b;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chart-preview:hover {
+            background-color: #334155;
+        }
+
+        .chart-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .chart-note {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+            text-align: center;
+            height: 2.5rem;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Calendar styles */
+        .calendar-day {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background-color: #334155;
+        }
+
+        .calendar-day.today {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .calendar-day.has-events {
+            position: relative;
+        }
+
+        .calendar-day.has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background-color: #3b82f6;
+            border-radius: 9999px;
+        }
+
+        .calendar-day.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .event-importance-high {
+            border-left: 3px solid #ef4444;
+        }
+
+        .event-importance-medium {
+            border-left: 3px solid #f59e0b;
+        }
+
+        .event-importance-low {
+            border-left: 3px solid #10b981;
+        }
+
+        .event-importance-none {
+            border-left: 3px solid #64748b;
+        }
+
+        /* Modern dropdown styles */
+        .dropdown-select {
+            position: relative;
+        }
+
+        .dropdown-toggle {
+            transition: all 0.2s ease;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.375rem;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            text-align: left;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-toggle:hover {
+            background-color: #334155 !important;
+        }
+
+        .dropdown-toggle:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .dropdown-menu {
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 10;
+            width: 100%;
+            margin-top: 0.25rem;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .dropdown-item {
+            transition: background-color 0.2s ease;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: #e2e8f0;
+        }
+
+        .dropdown-item:hover {
+            background-color: #334155;
+        }
+
+        .dropdown-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .dropdown-toggle.open i {
+            transform: rotate(180deg);
+        }
+
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .grid-cols-1 {
+                grid-template-columns: 1fr;
+            }
+
+            .lg\:grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .lg\:col-span-1,
+            .lg\:col-span-3 {
+                grid-column: span 1;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .header-buttons button {
+                width: 100%;
+            }
+
+            .modal {
+                width: 95%;
+                max-height: 90vh;
+            }
+        }
+
+        #newEntryBtn:hover {
+            filter: brightness(1.15) drop-shadow(0 0 8px #3b82f6);
+        }
+
+        #newEntryBtn:hover .fa-square-plus {
+            filter: brightness(1.3) drop-shadow(0 0 6px #2563eb);
+        }
+
+        .delete-hover-red {
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        #deleteAllBtn:hover .delete-hover-red {
+            color: #ef4444;
+        }
+
+        .footer-icon {
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .footer-icon[aria-label="Discord"]:hover {
+            color: #5865F2;
+        }
+
+        .footer-icon[aria-label="Twitter"]:hover {
+            color: #1da1f2;
+        }
+
+        .footer-icon[aria-label="Telegram"]:hover {
+            color: #229ED9;
+        }
+
+        .footer-icon[aria-label="YouTube"]:hover {
+            color: #FF0000;
         }
     </style>
 </head>
 
-<body
-    class="bg-gray-50 dark:bg-night-900 min-h-screen text-night-800 dark:text-gray-200 transition-colors duration-300 flex flex-col justify-between">
-    <div class="container mx-auto px-4 py-8 max-w-6xl flex-grow">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
-            <h1 class="text-3xl font-bold text-primary-600 dark:text-primary-400">Journal</h1>
-            <div class="flex items-center space-x-4">
-                <button id="themeToggle" aria-label="Basculer le thème"
-                    class="theme-toggle p-2 rounded-full bg-white dark:bg-night-700 shadow-md hover:shadow-lg">
-                    <i class="fas fa-moon text-night-700 dark:text-yellow-300"></i>
-                </button>
-
-                <div class="flex items-center space-x-2">
-                    <button id="prevMonth" aria-label="Mois précédent"
-                        class="p-2 rounded-lg bg-white dark:bg-night-700 shadow-md hover:bg-gray-50 dark:hover:bg-night-600 transition">
-                        <i class="fas fa-chevron-left text-sm"></i>
+<body class="bg-dark-900 text-gray-200 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">
+                        <i class="fas fa-chart-line text-blue-400 mr-2"></i>
+                        Price Action Journal
+                    </h1>
+                    <p class="text-gray-400 mt-2">Track your market observations and improve your trading skills</p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full md:w-auto header-buttons">
+                    <button id="importBtn"
+                        class="bg-dark-700 hover:bg-dark-600 text-white px-3 py-2 rounded-lg flex items-center transition-all group">
+                        <i class="fas fa-cloud-arrow-down mr-2 group-hover:text-blue-400 transition-colors"></i> Import
                     </button>
-                    <div class="relative">
-                        <button id="monthDropdown" aria-haspopup="true" aria-expanded="false"
-                            class="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-night-700 rounded-lg shadow-md hover:bg-gray-50 dark:hover:bg-night-600 transition">
-                            <span id="currentMonthDisplay" class="font-medium"></span> <i
-                                class="fas fa-chevron-down text-sm"></i>
-                        </button>
-                        <div id="monthDropdownMenu"
-                            class="hidden absolute top-full left-1/2 transform -translate-x-1/2 md:left-0 md:transform-none mt-2 w-48 bg-white dark:bg-night-700 rounded-md shadow-lg z-10">
-                            <div class="p-2">
-                                <input type="month" id="monthPicker"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 text-night-800 dark:text-gray-200">
-                            </div>
-                        </div>
-                    </div>
-                    <button id="nextMonth" aria-label="Mois suivant"
-                        class="p-2 rounded-lg bg-white dark:bg-night-700 shadow-md hover:bg-gray-50 dark:hover:bg-night-600 transition">
-                        <i class="fas fa-chevron-right text-sm"></i>
+                    <button id="exportBtn"
+                        class="bg-dark-700 hover:bg-dark-600 text-white px-3 py-2 rounded-lg flex items-center transition-all group">
+                        <i class="fas fa-cloud-arrow-up mr-2 group-hover:text-green-400 transition-colors"></i> Export
+                    </button>
+                    <button id="deleteAllBtn" style="background:none;border:none;cursor:pointer;padding:0 0.5em;"
+                        title="Delete All">
+                        <span class="material-icons delete-hover-red"
+                            style="font-size:2.7rem;vertical-align:middle;transition:color 0.2s;">delete</span>
+                    </button>
+                    <button id="newEntryBtn" style="background:none;border:none;cursor:pointer;padding:0 0.5em;"
+                        title="New Entry">
+                        <span class="material-icons"
+                            style="font-size:2.7rem;color:#3b82f6;vertical-align:middle;transition:color 0.2s;">add_circle</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="glass-card rounded-2xl p-4 md:p-6 mb-8 shadow-lg">
-            <div class="grid grid-cols-7 gap-1 md:gap-2 mb-4 text-xs md:text-base">
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Dim</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Lun</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Mar</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Mer</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Jeu</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Ven</div>
-                <div class="text-center font-medium text-primary-600 dark:text-primary-400 py-2">Sam</div>
-            </div>
-            <div id="calendarGrid" class="grid grid-cols-7 gap-1 md:gap-2">
-            </div>
-        </div>
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar Filters -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-dark-800 p-4 rounded-lg shadow-sm h-fit sticky top-4 border border-dark-700">
+                    <h2 class="text-lg font-semibold mb-4 text-white">
+                        <i class="fas fa-filter mr-2 text-blue-400"></i>Filters
+                    </h2>
 
-        <div id="timeSlotsSection" class="hidden glass-card rounded-2xl p-4 md:p-6 shadow-lg slide-up">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="selectedDateTitle" class="text-xl font-semibold text-primary-600 dark:text-primary-400"></h2>
-                <div class="flex items-center space-x-2">
-                    <div class="cycle-buttons">
-                        <button id="exportData"
-                            class="bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition">Exporter
-                            les données</button>
-                        <button id="importData"
-                            class="bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition">Importer
-                            les données</button>
-                        <button id="deleteAllData"
-                            class="bg-red-600 text-white font-medium rounded-md hover:bg-red-700 transition">Supprimer
-                            les données</button>
-                        <input type="file" id="importFileInput" accept="application/json" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Plage de dates</label>
+                        <div class="flex space-x-2">
+                            <input type="date" id="startDateFilter" class="bg-dark-700 text-white rounded p-2 w-1/2"
+                                placeholder="Date début">
+                            <input type="date" id="endDateFilter" class="bg-dark-700 text-white rounded p-2 w-1/2"
+                                placeholder="Date fin">
+                        </div>
                     </div>
-                    <button id="closeTimeSlots" aria-label="Fermer les cycles"
-                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
-                        <i class="fas fa-times"></i>
+
+                    <div class="mb-4 relative">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Market</label>
+                        <div class="dropdown-select">
+                            <button
+                                class="dropdown-toggle w-full flex justify-between items-center border border-dark-700 rounded p-2 bg-dark-800 text-white text-left">
+                                <span id="marketFilterDisplay">All Markets</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                            <div
+                                class="dropdown-menu hidden absolute z-10 w-full mt-1 bg-dark-800 border border-dark-700 rounded-lg shadow-lg py-1">
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer" data-value="">All
+                                    Markets</div>
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                    data-value="forex">Forex</div>
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                    data-value="stocks">Stocks</div>
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                    data-value="crypto">Cryptocurrency</div>
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                    data-value="indices">Indices</div>
+                                <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                    data-value="commodities">Commodities</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+                        <div class="flex flex-wrap gap-2 mt-1" id="tagFilters">
+                            <!-- Tags will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <button id="applyFilters"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg w-full text-sm mb-2 flex items-center justify-center gap-2">
+                        <span class="material-icons"
+                            style="font-size:1.3em;vertical-align:middle;">app_registration</span>
+                        Apply Filters
+                    </button>
+                    <button id="clearFilters" class="text-gray-400 hover:text-gray-200 text-sm w-full text-left">
+                        Clear all filters
                     </button>
                 </div>
-            </div>
 
-            <div id="timeSlotsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="time-slot bg-white dark:bg-night-800 rounded-xl p-4 shadow-md hover:shadow-lg relative group"
-                    data-slot-key="18-00">
-                    <div class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition">
-                        <button class="edit-slot p-1 rounded-full hover:bg-gray-100 dark:hover:bg-night-700"
-                            aria-label="Modifier l'entrée">
-                            <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
-                        </button>
+                <!-- Calendar and Economic Events -->
+                <div class="bg-dark-800 p-4 rounded-lg shadow-sm border border-dark-700 sticky top-[500px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-white">
+                            <i class="fas fa-calendar-alt mr-2 text-blue-400"></i>Calendar
+                        </h2>
+                        <div class="flex space-x-2">
+                            <button id="prevMonth" class="text-gray-400 hover:text-white p-1">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button id="nextMonth" class="text-gray-400 hover:text-white p-1">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
-                            class="fas fa-circle cycle-icon cycle-icon-c1"></i>C1 (18:00-00:00)</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 1</div>
-                    <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
-                    </div>
-                </div>
 
-                <div class="time-slot bg-white dark:bg-night-800 rounded-xl p-4 shadow-md hover:shadow-lg relative group"
-                    data-slot-key="00-06">
-                    <div class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition">
-                        <button class="edit-slot p-1 rounded-full hover:bg-gray-100 dark:hover:bg-night-700"
-                            aria-label="Modifier l'entrée">
-                            <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
-                        </button>
+                    <div class="mb-4">
+                        <div class="text-center font-medium text-gray-300 mb-2" id="currentMonthYear">
+                            <!-- Month and year will be inserted here -->
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-2">
+                            <div>S</div>
+                            <div>M</div>
+                            <div>T</div>
+                            <div>W</div>
+                            <div>T</div>
+                            <div>F</div>
+                            <div>S</div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1" id="calendarDays">
+                            <!-- Calendar days will be inserted here -->
+                        </div>
                     </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
-                            class="fas fa-circle cycle-icon cycle-icon-c2"></i>C2 (00:00-06:00)</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 2</div>
-                    <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
-                    </div>
-                </div>
 
-                <div class="time-slot bg-white dark:bg-night-800 rounded-xl p-4 shadow-md hover:shadow-lg relative group"
-                    data-slot-key="06-12">
-                    <div class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition">
-                        <button class="edit-slot p-1 rounded-full hover:bg-gray-100 dark:hover:bg-night-700"
-                            aria-label="Modifier l'entrée">
-                            <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
-                        </button>
-                    </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
-                            class="fas fa-circle cycle-icon cycle-icon-c3"></i>C3 (06:00-12:00)</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 3</div>
-                    <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
-                    </div>
-                </div>
-
-                <div class="time-slot bg-white dark:bg-night-800 rounded-xl p-4 shadow-md hover:shadow-lg relative group"
-                    data-slot-key="12-18">
-                    <div class="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition">
-                        <button class="edit-slot p-1 rounded-full hover:bg-gray-100 dark:hover:bg-night-700"
-                            aria-label="Modifier l'entrée">
-                            <i class="fas fa-pencil-alt text-xs text-primary-600 dark:text-primary-400"></i>
-                        </button>
-                    </div>
-                    <h3 class="font-medium text-primary-600 dark:text-primary-400 mb-2"><i
-                            class="fas fa-circle cycle-icon cycle-icon-c4"></i>C4 (12:00-18:00)</h3>
-                    <div class="text-sm text-night-600 dark:text-gray-300 mb-3">Cycle 4</div>
-                    <div class="entry-content text-night-700 dark:text-gray-200 text-sm">
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-medium" style="color:#fb923c;">
+                                <i class="fas fa-bullhorn mr-2" style="color:#fb923c;"></i>Economic Events
+                            </h3>
+                            <button id="addEventBtn"
+                                class="text-xs bg-blue-500 hover:bg-orange-500 text-white px-2 py-1 rounded transition-colors flex items-center"
+                                style="transition:background-color 0.2s;">
+                                <i class="fas fa-plus mr-1" style="transition:none;"></i> Add
+                            </button>
+                        </div>
+                        <div class="space-y-2 max-h-60 overflow-y-auto" id="eventsList">
+                            <!-- Events will be inserted here -->
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="entryModal"
-            class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4 fade-in" role="dialog"
-            aria-modal="true" aria-labelledby="modalTitle">
-            <div class="glass-card rounded-2xl p-6 w-full max-w-md shadow-xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 id="modalTitle" class="text-lg font-semibold text-primary-600 dark:text-primary-400"></h3>
-                    <button id="closeModal" aria-label="Fermer la modale"
-                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
-                        <i class="fas fa-times"></i>
-                    </button>
+            <!-- Journal Entries -->
+            <div class="lg:col-span-3">
+                <div class="bg-dark-800 p-4 rounded-lg shadow-sm mb-4 border border-dark-700">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-white">
+                            <i class="fas fa-book-open mr-2 text-blue-400"></i>Recent Observations
+                        </h2>
+                        <div class="text-sm text-gray-400" id="entryCount">0 entries</div>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="entryAsset"
-                        class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Actif</label>
-                    <input type="text" id="entryAsset"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
-                </div>
-                <div class="mb-4">
-                    <label for="entryText"
-                        class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Notes</label>
-                    <textarea id="entryText" rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200"></textarea>
-                </div>
-                <div class="mb-4">
-                    <label for="entryUrl" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">URL
-                        (optionnel)</label>
-                    <input type="url" id="entryUrl"
-                        class="w-full px-3 py-2 border border-gray-300 dark theynclude dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
-                </div>
-                <div class="mb-4">
-                    <label for="entryPL" class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">P&L
-                        (USD)</label>
-                    <input type="number" id="entryPL" step="0.01"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-night-600 rounded-md bg-white dark:bg-night-800 focus:ring-primary-500 focus:border-primary-500 text-night-800 dark:text-gray-200">
-                </div>
-                <div id="deleteEntryButton" class="mb-4 hidden">
-                    <button class="text-red-600 dark:text-red-400 text-sm hover:underline">Supprimer l'entrée</button>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button id="cancelEntry"
-                        class="px-4 py-2 text-sm font-medium rounded-md text-night-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-night-700 transition">
-                        Annuler
-                    </button>
-                    <button id="saveEntry"
-                        class="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 transition">
-                        Enregistrer
-                    </button>
+
+                <div id="entriesContainer" class="space-y-4">
+                    <!-- Entries will be loaded here -->
+                    <div class="text-center py-10 text-gray-500" id="noEntriesMessage">
+                        <i class="fas fa-book fa-3x mb-4 text-dark-700"></i>
+                        <p class="text-lg">No journal entries yet</p>
+                        <p class="text-sm mt-1">Click "New Entry" to add your first observation</p>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div id="displayModal"
-            class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4 fade-in" role="dialog"
-            aria-modal="true" aria-labelledby="displayModalTitle">
-            <div class="glass-card rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 id="displayModalTitle" class="text-lg font-semibold text-primary-600 dark:text-primary-400">
-                    </h3>
-                    <button id="closeDisplayModalIcon" aria-label="Fermer la modale d'affichage"
-                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-night-700 transition">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="displayModalUrlContainer" class="mb-4 hidden">
-                    <label class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">URL</label>
-                    <a id="displayModalUrl" href="#" target="_blank"
-                        class="text-primary-600 dark:text-primary-400 text-sm block truncate hover:underline"></a>
-                    <p id="displayModalUrlError" class="text-red-500 text-xs mt-1 hidden">URL invalide</p>
-                </div>
-                <div id="displayModalNotesContainer" class="mb-4 hidden">
-                    <label class="block text-sm font-medium text-night-700 dark:text-gray-300 mb-1">Notes</label>
-                    <div id="displayModalNotes" class="notes-display text-night-700 dark:text-gray-200 text-sm"></div>
-                </div>
-                <div id="displayModalEmpty" class="mb-4 hidden">
-                    <p class="text-night-600 dark:text-gray-400 italic text-sm">Aucune entrée enregistrée pour ce cycle.
-                    </p>
-                </div>
-                <div class="flex justify-end">
-                    <button id="closeDisplayModalButton"
-                        class="px-4 py-2 text-sm font-medium rounded-md text-night-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-night-700 transition">
-                        Fermer
-                    </button>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <footer class="text-center py-4 text-xs text-gray-600 dark:text-gray-400">
-        Powered by 3drives
-    </footer>
+    <!-- New Entry Modal -->
+    <div id="entryModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div
+            class="bg-dark-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-dark-700 modal">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-white">New Journal Entry</h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="entryForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Date & Time (EST)</label>
+                        <input type="datetime-local" id="entryDateTime"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Market</label>
+                            <div class="dropdown-select relative">
+                                <button type="button" id="entryMarketDropdown"
+                                    class="dropdown-toggle w-full flex justify-between items-center border border-dark-700 rounded p-2 bg-dark-800 text-white text-left">
+                                    <span id="entryMarketDisplay">Select Market</span>
+                                    <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                                </button>
+                                <div id="entryMarketMenu"
+                                    class="dropdown-menu hidden absolute z-10 w-full mt-1 bg-dark-800 border border-dark-700 rounded-lg shadow-lg py-1">
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer" data-value="">
+                                        <i class="fas fa-globe text-blue-400 mr-2"></i>All Markets
+                                    </div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="forex"><i class="fas fa-globe-europe text-blue-400 mr-2"></i>Forex
+                                    </div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="stocks"><i class="fas fa-chart-bar text-green-400 mr-2"></i>Stocks
+                                    </div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="crypto"><i
+                                            class="fab fa-bitcoin text-yellow-400 mr-2"></i>Cryptocurrency</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="indices"><i
+                                            class="fas fa-chart-area text-purple-400 mr-2"></i>Indices</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="commodities"><i
+                                            class="fas fa-gas-pump text-orange-400 mr-2"></i>Commodities</div>
+                                </div>
+                                <input type="hidden" id="entryMarket" name="entryMarket" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Session</label>
+                            <div class="dropdown-select relative">
+                                <button type="button" id="entrySessionDropdown"
+                                    class="dropdown-toggle w-full flex justify-between items-center border border-dark-700 rounded p-2 bg-dark-800 text-white text-left">
+                                    <span id="entrySessionDisplay">Select Session</span>
+                                    <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                                </button>
+                                <div id="entrySessionMenu"
+                                    class="dropdown-menu hidden absolute z-10 w-full mt-1 bg-dark-800 border border-dark-700 rounded-lg shadow-lg py-1">
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="C1">C1: 6PM-12AM EST</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="C2">C2: 12AM-6AM EST</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="C3">C3: 6AM-12PM EST</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="C4">C4: 12PM-6PM EST</div>
+                                    <div class="dropdown-item px-4 py-2 hover:bg-dark-700 cursor-pointer"
+                                        data-value="Analysis">Analysis (weekend/hebdo)</div>
+                                </div>
+                                <input type="hidden" id="entrySession" name="entrySession" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Symbol (e.g. EUR/USD,
+                            BTC/USD)</label>
+                        <input type="text" id="entrySymbol"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="BTC/USD" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Observation Title</label>
+                        <input type="text" id="entryTitle"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="e.g. Bullish engulfing pattern forming" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Detailed Notes</label>
+                        <textarea id="entryNotes" rows="5"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="Describe the price action, patterns, and your analysis..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex border-b border-dark-700 mb-3">
+                            <button type="button" class="chart-type-tab active px-4 py-2 rounded-t-lg"
+                                data-chart="h1">H1 Chart</button>
+                            <button type="button" class="chart-type-tab px-4 py-2 rounded-t-lg" data-chart="m15">M15
+                                Chart</button>
+                            <button type="button" class="chart-type-tab px-4 py-2 rounded-t-lg" data-chart="m5">M5/M2
+                                Chart</button>
+                        </div>
+
+                        <div id="h1-chart-container" class="chart-container">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">H1 Chart URL</label>
+                            <input type="url" id="entryH1ImageUrl"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white mb-2"
+                                placeholder="https://example.com/h1-chart.png">
+                            <div class="image-preview-container bg-dark-700 rounded p-2 flex justify-center items-center h-32"
+                                id="h1-preview-container">
+                                <p class="text-gray-500 text-sm">H1 chart preview will appear here</p>
+                            </div>
+                            <textarea id="entryH1Notes"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white text-xs mt-2"
+                                placeholder="Brief notes about H1 timeframe (e.g. Bullish trend, potential resistance at 1.1200)"
+                                rows="2"></textarea>
+                        </div>
+
+                        <div id="m15-chart-container" class="chart-container hidden">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">M15 Chart URL</label>
+                            <input type="url" id="entryM15ImageUrl"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white mb-2"
+                                placeholder="https://example.com/m15-chart.png">
+                            <div class="image-preview-container bg-dark-700 rounded p-2 flex justify-center items-center h-32"
+                                id="m15-preview-container">
+                                <p class="text-gray-500 text-sm">M15 chart preview will appear here</p>
+                            </div>
+                            <textarea id="entryM15Notes"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white text-xs mt-2"
+                                placeholder="Brief notes about M15 timeframe (e.g. Consolidation pattern, watch for breakout)"
+                                rows="2"></textarea>
+                        </div>
+
+                        <div id="m5-chart-container" class="chart-container hidden">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">M5/M2 Chart URL</label>
+                            <input type="url" id="entryM5ImageUrl"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white mb-2"
+                                placeholder="https://example.com/m5-chart.png">
+                            <div class="image-preview-container bg-dark-700 rounded p-2 flex justify-center items-center h-32"
+                                id="m5-preview-container">
+                                <p class="text-gray-500 text-sm">M5/M2 chart preview will appear here</p>
+                            </div>
+                            <textarea id="entryM5Notes"
+                                class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white text-xs mt-2"
+                                placeholder="Brief notes about M5/M2 timeframe (e.g. Short-term pullback, potential entry point)"
+                                rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Tags</label>
+                        <div class="tag-input-container">
+                            <input type="text" id="tagInput" class="tag-input"
+                                placeholder="Type and press enter to add tags">
+                        </div>
+                        <div class="flex flex-wrap gap-2 mt-2" id="tagsContainer"></div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancelEntry"
+                            class="px-4 py-2 border border-dark-700 rounded-lg text-gray-300 hover:bg-dark-700 hover:text-white">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            Save Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Entry Modal -->
+    <div id="viewEntryModal"
+        class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div
+            class="bg-dark-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-dark-700 modal">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-white" id="viewEntryTitle"></h3>
+                    <button id="closeViewModal" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex items-center text-sm text-gray-400 mb-2">
+                        <span id="viewEntryDateTime" class="mr-3"></span>
+                        <span id="viewEntryMarket" class="mr-3"></span>
+                        <span id="viewEntrySession"></span>
+                    </div>
+                    <div class="text-sm font-medium text-gray-300 mb-2">
+                        <span id="viewEntrySymbol"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-300 mb-1">Charts</h4>
+                    <div class="chart-grid">
+                        <div class="chart-container">
+                            <div class="chart-preview" id="view-h1-chart"
+                                onclick="event.stopPropagation(); openChartUrlFromEntry(currentEditingId, 'h1')">
+                                <div id="view-h1-preview-container"
+                                    class="w-full h-full flex items-center justify-center">
+                                    <p class="text-gray-500 text-sm">No H1 chart available</p>
+                                </div>
+                            </div>
+                            <div class="chart-note" id="view-h1-note"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-preview" id="view-m15-chart"
+                                onclick="event.stopPropagation(); openChartUrlFromEntry(currentEditingId, 'm15')">
+                                <div id="view-m15-preview-container"
+                                    class="w-full h-full flex items-center justify-center">
+                                    <p class="text-gray-500 text-sm">No M15 chart available</p>
+                                </div>
+                            </div>
+                            <div class="chart-note" id="view-m15-note"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-preview" id="view-m5-chart"
+                                onclick="event.stopPropagation(); openChartUrlFromEntry(currentEditingId, 'm5')">
+                                <div id="view-m5-preview-container"
+                                    class="w-full h-full flex items-center justify-center">
+                                    <p class="text-gray-500 text-sm">No M5/M2 chart available</p>
+                                </div>
+                            </div>
+                            <div class="chart-note" id="view-m5-note"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-300 mb-1">Tags</h4>
+                    <div class="flex flex-wrap gap-2" id="viewEntryTags"></div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-300 mb-1">Observation Notes</h4>
+                    <div class="bg-dark-700 p-3 rounded text-gray-200" id="viewEntryNotes"></div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button id="deleteEntryBtn" class="text-red-400 hover:text-red-300 px-4 py-2">
+                        <i class="fas fa-trash mr-1"></i> Delete
+                    </button>
+                    <button id="editEntryBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+        <div
+            class="bg-dark-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-dark-700 modal">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-white">Add Economic Event</h3>
+                    <button id="closeEventModal" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="eventForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Date</label>
+                        <input type="date" id="eventDate"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Time (EST)</label>
+                        <input type="time" id="eventTime"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Event Name</label>
+                        <input type="text" id="eventName"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="e.g. Non-Farm Payrolls" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Importance</label>
+                        <div class="dropdown-select">
+                            <select id="eventImportance"
+                                class="dropdown-toggle w-full flex justify-between items-center border border-dark-700 rounded p-2 bg-dark-800 text-white text-left"
+                                required>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Currency/Asset</label>
+                        <input type="text" id="eventCurrency"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="e.g. USD, EUR, BTC">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+                        <textarea id="eventNotes" rows="3"
+                            class="border border-dark-700 rounded p-2 w-full bg-dark-800 text-white"
+                            placeholder="Additional details about the event"></textarea>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancelEvent"
+                            class="px-4 py-2 border border-dark-700 rounded-lg text-gray-300 hover:bg-dark-700 hover:text-white">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                            Save Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" class="file-input" accept=".json">
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const themeToggle = document.getElementById('themeToggle');
-            const currentMonthDisplay = document.getElementById('currentMonthDisplay');
-            const monthDropdown = document.getElementById('monthDropdown');
-            const monthDropdownMenu = document.getElementById('monthDropdownMenu');
-            const monthPicker = document.getElementById('monthPicker');
-            const prevMonthButton = document.getElementById('prevMonth');
-            const nextMonthButton = document.getElementById('nextMonth');
-            const calendarGrid = document.getElementById('calendarGrid');
-            const timeSlotsSection = document.getElementById('timeSlotsSection');
-            const selectedDateTitle = document.getElementById('selectedDateTitle');
-            const closeTimeSlotsButton = document.getElementById('closeTimeSlots');
-            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
-            const entryModal = document.getElementById('entryModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const entryTextarea = document.getElementById('entryText');
-            const entryUrlInput = document.getElementById('entryUrl');
-            const entryAssetInput = document.getElementById('entryAsset');
-            const entryPLInput = document.getElementById('entryPL');
-            const deleteEntryButton = document.getElementById('deleteEntryButton');
-            const closeModalButton = document.getElementById('closeModal');
-            const cancelEntryButton = document.getElementById('cancelEntry');
-            const saveEntryButton = document.getElementById('saveEntry');
+        // Initialize variables
+        let entries = JSON.parse(localStorage.getItem('priceActionJournal')) || [];
+        let currentEditingId = null;
+        let allTags = [];
+        let activeFilters = {
+            session: null,
+            market: null,
+            tags: [],
+            startDate: null,
+            endDate: null
+        };
 
-            const displayModal = document.getElementById('displayModal');
-            const displayModalTitle = document.getElementById('displayModalTitle');
-            const displayModalUrlContainer = document.getElementById('displayModalUrlContainer');
-            const displayModalUrl = document.getElementById('displayModalUrl');
-            const displayModalUrlError = document.getElementById('displayModalUrlError');
-            const displayModalNotesContainer = document.getElementById('displayModalNotesContainer');
-            const displayModalNotes = document.getElementById('displayModalNotes');
-            const displayModalEmpty = document.getElementById('displayModalEmpty');
-            const closeDisplayModalButton = document.getElementById('closeDisplayModalButton');
-            const closeDisplayModalIcon = document.getElementById('closeDisplayModalIcon');
+        // Economic events data
+        let economicEvents = JSON.parse(localStorage.getItem('economicEvents')) || [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = new Date();
 
-            const exportDataButton = document.getElementById('exportData');
-            const importDataButton = document.getElementById('importData');
-            const importFileInput = document.getElementById('importFileInput');
-            const deleteAllDataButton = document.getElementById('deleteAllData');
+        // DOM Elements
+        const newEntryBtn = document.getElementById('newEntryBtn');
+        const entryModal = document.getElementById('entryModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelEntry = document.getElementById('cancelEntry');
+        const entryForm = document.getElementById('entryForm');
+        const entriesContainer = document.getElementById('entriesContainer');
+        const noEntriesMessage = document.getElementById('noEntriesMessage');
+        const viewEntryModal = document.getElementById('viewEntryModal');
+        const closeViewModal = document.getElementById('closeViewModal');
+        const deleteEntryBtn = document.getElementById('deleteEntryBtn');
+        const editEntryBtn = document.getElementById('editEntryBtn');
+        const applyFilters = document.getElementById('applyFilters');
+        const clearFilters = document.getElementById('clearFilters');
+        const importBtn = document.getElementById('importBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        const fileInput = document.getElementById('fileInput');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
 
-            let currentDisplayedDate = new Date();
-            let selectedDate = null;
-            let editingTimeSlotKey = null;
+        // Calendar elements
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const currentMonthYear = document.getElementById('currentMonthYear');
+        const calendarDays = document.getElementById('calendarDays');
+        const eventsList = document.getElementById('eventsList');
+        const addEventBtn = document.getElementById('addEventBtn');
+        const eventModal = document.getElementById('eventModal');
+        const closeEventModal = document.getElementById('closeEventModal');
+        const cancelEvent = document.getElementById('cancelEvent');
+        const eventForm = document.getElementById('eventForm');
 
-            const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
-            const STORAGE_KEY = 'journalEntries';
+        // Tag functionality
+        const tagInput = document.getElementById('tagInput');
+        const tagsContainer = document.getElementById('tagsContainer');
+        const tagFilters = document.getElementById('tagFilters');
 
-            function loadEntries() {
-                const data = localStorage.getItem(STORAGE_KEY);
-                try {
-                    return data ? JSON.parse(data) : {};
-                } catch (e) {
-                    console.error("Failed to parse data from localStorage", e);
-                    return {};
-                }
+        // Chart tabs
+        const chartTabs = document.querySelectorAll('.chart-type-tab');
+        const chartContainers = document.querySelectorAll('.chart-container');
+        const viewChartTabs = document.querySelectorAll('.view-chart-tab');
+        const viewChartContainers = document.querySelectorAll('.view-chart-container');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderEntries();
+            updateTagFilters();
+            setDefaultDateTime();
+
+            // Set up chart tab switching
+            setupChartTabs();
+            setupViewChartTabs();
+
+            // Set up image URL previews
+            setupImagePreviews();
+
+            // Set up import/export
+            setupImportExport();
+
+            // Initialize calendar
+            renderCalendar();
+            renderEventsForDate(selectedDate);
+
+            // Initialize custom dropdowns
+            setupCustomDropdowns();
+
+            // Initialize dropdowns for New Entry Modal
+            setupEntryModalDropdowns();
+        });
+
+        // Delete all entries
+        deleteAllBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete ALL entries? This action cannot be undone.')) {
+                entries = [];
+                localStorage.setItem('priceActionJournal', JSON.stringify(entries));
+                renderEntries();
+                updateTagFilters();
             }
+        });
 
-            function saveEntries(entries) {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-                } catch (e) {
-                    console.error("Failed to save data to localStorage", e);
-                }
-            }
-
-            function getEntry(dateString, slotKey) {
-                const entries = loadEntries();
-                const entry = entries[dateString]?.[slotKey];
-                if (entry && !entry.text && !entry.url && !entry.asset && entry.pl === undefined) {
-                    return null;
-                }
-                return entry || null;
-            }
-
-            function setEntry(dateString, slotKey, data) {
-                const entries = loadEntries();
-                if (!data || (!data.text && !data.url && !data.asset && data.pl === undefined)) {
-                    if (entries[dateString]?.[slotKey]) {
-                        delete entries[dateString][slotKey];
-                        if (entries[dateString] && Object.keys(entries[dateString]).length === 0) {
-                            delete entries[dateString];
-                        }
-                    }
+        // Custom dropdown functionality
+        function setupCustomDropdowns() {
+            document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+                if (toggle.tagName === 'SELECT') {
+                    toggle.addEventListener('focus', () => {
+                        toggle.classList.add('open');
+                    });
+                    toggle.addEventListener('blur', () => {
+                        toggle.classList.remove('open');
+                    });
                 } else {
-                    if (!entries[dateString]) {
-                        entries[dateString] = {};
-                    }
-                    entries[dateString][slotKey] = {
-                        text: data.text || '',
-                        url: data.url || '',
-                        asset: data.asset || '',
-                        pl: data.pl !== undefined ? data.pl : undefined
-                    };
+                    toggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const dropdown = toggle.closest('.dropdown-select');
+                        const menu = dropdown.querySelector('.dropdown-menu');
+
+                        // Close all other dropdowns
+                        document.querySelectorAll('.dropdown-menu').forEach(m => {
+                            if (m !== menu) m.classList.add('hidden');
+                        });
+                        document.querySelectorAll('.dropdown-toggle').forEach(t => {
+                            if (t !== toggle) t.classList.remove('open');
+                        });
+
+                        // Toggle current dropdown
+                        menu.classList.toggle('hidden');
+                        toggle.classList.toggle('open');
+                    });
                 }
-                saveEntries(entries);
+            });
+
+            // Handle dropdown item selection
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const dropdown = item.closest('.dropdown-select');
+                    const toggle = dropdown.querySelector('.dropdown-toggle');
+                    const display = dropdown.querySelector('#marketFilterDisplay');
+
+                    // Update display
+                    display.textContent = item.textContent;
+
+                    // Mark as active
+                    dropdown.querySelectorAll('.dropdown-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+                    item.classList.add('active');
+
+                    // Close menu
+                    dropdown.querySelector('.dropdown-menu').classList.add('hidden');
+                    toggle.classList.remove('open');
+
+                    // Update filter
+                    activeFilters.market = item.dataset.value || null;
+                    renderEntries();
+                });
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+                document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+                    toggle.classList.remove('open');
+                });
+            });
+        }
+
+        // --- Fix dropdown open/close for New Entry Modal ---
+        function setupEntryModalDropdowns() {
+            // Market
+            entryMarketDropdown.addEventListener('click', function (e) {
+                e.stopPropagation();
+                // Ferme tous les autres dropdowns
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== entryMarketMenu) m.classList.add('hidden');
+                });
+                document.querySelectorAll('.dropdown-toggle').forEach(t => {
+                    if (t !== entryMarketDropdown) t.classList.remove('open');
+                });
+                entryMarketMenu.classList.toggle('hidden');
+                entryMarketDropdown.classList.toggle('open');
+            });
+            entryMarketMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    entryMarketDisplay.innerHTML = item.innerHTML;
+                    entryMarketInput.value = item.dataset.value;
+                    entryMarketMenu.classList.add('hidden');
+                    entryMarketDropdown.classList.remove('open');
+                });
+            });
+            // Session
+            entrySessionDropdown.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    if (m !== entrySessionMenu) m.classList.add('hidden');
+                });
+                document.querySelectorAll('.dropdown-toggle').forEach(t => {
+                    if (t !== entrySessionDropdown) t.classList.remove('open');
+                });
+                entrySessionMenu.classList.toggle('hidden');
+                entrySessionDropdown.classList.toggle('open');
+            });
+            entrySessionMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function () {
+                    entrySessionDisplay.textContent = item.textContent;
+                    entrySessionInput.value = item.dataset.value;
+                    entrySessionMenu.classList.add('hidden');
+                    entrySessionDropdown.classList.remove('open');
+                });
+            });
+            // Ferme les dropdowns si clic en dehors
+            document.addEventListener('click', function (e) {
+                if (!entryMarketDropdown.contains(e.target)) {
+                    entryMarketMenu.classList.add('hidden');
+                    entryMarketDropdown.classList.remove('open');
+                }
+                if (!entrySessionDropdown.contains(e.target)) {
+                    entrySessionMenu.classList.add('hidden');
+                    entrySessionDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Calendar functions
+        function renderCalendar() {
+            // Set month and year title
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            currentMonthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            // Get first day of month and total days in month
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // Clear previous calendar days
+            calendarDays.innerHTML = '';
+
+            // Add empty cells for days before first day of month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'h-8';
+                calendarDays.appendChild(emptyDay);
             }
 
-            function dateHasEntries(dateString) {
-                const entries = loadEntries();
-                const dateEntries = entries[dateString];
-                if (!dateEntries) return false;
-                for (const slotKey in dateEntries) {
-                    if (dateEntries[slotKey] && (dateEntries[slotKey].text || dateEntries[slotKey].url || dateEntries[slotKey].asset || dateEntries[slotKey].pl !== undefined)) {
-                        return true;
-                    }
+            // Add days of month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+
+                // Check if this day has events
+                const hasEvents = economicEvents.some(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getDate() === day &&
+                        eventDate.getMonth() === currentMonth &&
+                        eventDate.getFullYear() === currentYear;
+                });
+
+                if (hasEvents) {
+                    dayElement.classList.add('has-events');
                 }
+
+                // Check if this is today
+                if (day === today.getDate() &&
+                    currentMonth === today.getMonth() &&
+                    currentYear === today.getFullYear()) {
+                    dayElement.classList.add('today');
+                }
+
+                // Check if this is the selected date
+                if (day === selectedDate.getDate() &&
+                    currentMonth === selectedDate.getMonth() &&
+                    currentYear === selectedDate.getFullYear()) {
+                    dayElement.classList.add('selected');
+                }
+
+                dayElement.textContent = day;
+                dayElement.addEventListener('click', () => {
+                    selectedDate = new Date(currentYear, currentMonth, day);
+                    renderCalendar();
+                    renderEventsForDate(selectedDate);
+                });
+
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function renderEventsForDate(date) {
+            eventsList.innerHTML = '';
+
+            const eventsForDate = economicEvents.filter(event => {
+                const eventDate = new Date(event.date);
+                return eventDate.getDate() === date.getDate() &&
+                    eventDate.getMonth() === date.getMonth() &&
+                    eventDate.getFullYear() === date.getFullYear();
+            });
+
+            if (eventsForDate.length === 0) {
+                eventsList.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No events scheduled</p>';
+                return;
+            }
+
+            // Sort events by time
+            eventsForDate.sort((a, b) => {
+                const timeA = a.time || '00:00';
+                const timeB = b.time || '00:00';
+                return timeA.localeCompare(timeB);
+            });
+
+            eventsForDate.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = `bg-dark-700 p-3 rounded text-sm event-importance-${event.importance || 'none'}`;
+
+                const time = event.time ? `<span class="text-blue-400">${event.time}</span>` : '';
+                const currency = event.currency ? `<span class="bg-dark-600 px-2 py-1 rounded text-xs ml-2">${event.currency}</span>` : '';
+
+                eventElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="font-medium">${event.name}</div>
+                        ${time} ${currency}
+                    </div>
+                    ${event.notes ? `<div class="text-gray-400 mt-1">${event.notes}</div>` : ''}
+                    <div class="flex justify-end mt-2">
+                        <button class="text-xs text-gray-400 hover:text-white mr-2 edit-event" data-id="${event.id}">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                        <button class="text-xs text-red-400 hover:text-red-300 delete-event" data-id="${event.id}">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                `;
+
+                eventsList.appendChild(eventElement);
+            });
+
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-event').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const eventId = btn.dataset.id;
+                    editEconomicEvent(eventId);
+                });
+            });
+
+            document.querySelectorAll('.delete-event').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const eventId = btn.dataset.id;
+                    deleteEconomicEvent(eventId);
+                });
+            });
+        }
+
+        function editEconomicEvent(eventId) {
+            const event = economicEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            // Fill the form with event data
+            const eventDate = new Date(event.date);
+            const formattedDate = eventDate.toISOString().split('T')[0];
+
+            document.getElementById('eventDate').value = formattedDate;
+            document.getElementById('eventTime').value = event.time || '';
+            document.getElementById('eventName').value = event.name;
+            document.getElementById('eventImportance').value = event.importance || 'none';
+            document.getElementById('eventCurrency').value = event.currency || '';
+            document.getElementById('eventNotes').value = event.notes || '';
+
+            // Store the event ID in the form
+            eventForm.dataset.editingId = eventId;
+
+            // Show the modal
+            eventModal.classList.remove('hidden');
+        }
+
+        function deleteEconomicEvent(eventId) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                economicEvents = economicEvents.filter(e => e.id !== eventId);
+                localStorage.setItem('economicEvents', JSON.stringify(economicEvents));
+                renderEventsForDate(selectedDate);
+                renderCalendar();
+            }
+        }
+
+        // Month navigation
+        prevMonthBtn.addEventListener('click', () => {
+            if (currentMonth === 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else {
+                currentMonth--;
+            }
+            renderCalendar();
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            if (currentMonth === 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else {
+                currentMonth++;
+            }
+            renderCalendar();
+        });
+
+        // Add event button
+        addEventBtn.addEventListener('click', () => {
+            // Reset form and set default date to selected date
+            eventForm.reset();
+            delete eventForm.dataset.editingId;
+
+            const formattedDate = selectedDate.toISOString().split('T')[0];
+            document.getElementById('eventDate').value = formattedDate;
+
+            // Show the modal
+            eventModal.classList.remove('hidden');
+        });
+
+        // Close event modal
+        closeEventModal.addEventListener('click', () => {
+            eventModal.classList.add('hidden');
+        });
+
+        cancelEvent.addEventListener('click', () => {
+            eventModal.classList.add('hidden');
+        });
+
+        // Save event
+        eventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const name = document.getElementById('eventName').value;
+            const importance = document.getElementById('eventImportance').value;
+            const currency = document.getElementById('eventCurrency').value;
+            const notes = document.getElementById('eventNotes').value;
+
+            const event = {
+                id: eventForm.dataset.editingId || Date.now().toString(),
+                date,
+                time,
+                name,
+                importance,
+                currency,
+                notes
+            };
+
+            if (eventForm.dataset.editingId) {
+                // Update existing event
+                const index = economicEvents.findIndex(e => e.id === eventForm.dataset.editingId);
+                if (index !== -1) {
+                    economicEvents[index] = event;
+                }
+            } else {
+                // Add new event
+                economicEvents.push(event);
+            }
+
+            // Save to localStorage
+            localStorage.setItem('economicEvents', JSON.stringify(economicEvents));
+
+            // Update UI
+            renderCalendar();
+            renderEventsForDate(selectedDate);
+
+            // Close modal
+            eventModal.classList.add('hidden');
+        });
+
+        // Set up chart tab switching
+        function setupChartTabs() {
+            chartTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    chartTabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+
+                    // Hide all containers
+                    chartContainers.forEach(c => c.classList.add('hidden'));
+                    // Show selected container
+                    const chartType = tab.dataset.chart;
+                    document.getElementById(`${chartType}-chart-container`).classList.remove('hidden');
+                });
+            });
+        }
+
+        // Set up view chart tab switching
+        function setupViewChartTabs() {
+            viewChartTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    viewChartTabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+
+                    // Hide all containers
+                    viewChartContainers.forEach(c => c.classList.add('hidden'));
+                    // Show selected container
+                    const chartType = tab.dataset.chart;
+                    document.getElementById(`view-${chartType}-chart-container`).classList.remove('hidden');
+                });
+            });
+        }
+
+        // Set up image URL previews
+        function setupImagePreviews() {
+            document.getElementById('entryH1ImageUrl').addEventListener('input', (e) => {
+                updateImagePreview(e.target.value, 'h1-preview-container');
+            });
+
+            document.getElementById('entryM15ImageUrl').addEventListener('input', (e) => {
+                updateImagePreview(e.target.value, 'm15-preview-container');
+            });
+
+            document.getElementById('entryM5ImageUrl').addEventListener('input', (e) => {
+                updateImagePreview(e.target.value, 'm5-preview-container');
+            });
+        }
+
+        function updateImagePreview(url, containerId) {
+            const container = document.getElementById(containerId);
+            if (url && isValidUrl(url)) {
+                container.innerHTML = `<img src="${url}" alt="Chart preview" class="max-h-full max-w-full object-contain">`;
+            } else {
+                container.innerHTML = `<p class="text-gray-500 text-sm">${containerId.replace('-preview-container', '').toUpperCase()} chart preview will appear here</p>`;
+            }
+        }
+
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
                 return false;
             }
+        }
 
-            function escapeHTML(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            themeToggle.addEventListener('click', () => {
-                const isDarkMode = document.documentElement.classList.toggle('dark');
-                const icon = themeToggle.querySelector('i');
-                if (isDarkMode) {
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                    if (icon.classList.contains('text-night-700')) {
-                        icon.classList.replace('text-night-700', 'text-yellow-300');
-                    }
-                } else {
-                    icon.classList.replace('fa-sun', 'fa-moon');
-                    if (icon.classList.contains('text-yellow-300')) {
-                        icon.classList.replace('text-yellow-300', 'text-night-700');
-                    }
-                }
-                updateMonthPickerIcon();
+        // Set up import/export functionality
+        function setupImportExport() {
+            importBtn.addEventListener('click', () => {
+                fileInput.click();
             });
 
-            function setInitialThemeIcon() {
-                const icon = themeToggle.querySelector('i');
-                if (document.documentElement.classList.contains('dark')) {
-                    icon.classList.replace('fa-moon', 'fa-sun');
-                    if (icon.classList.contains('text-night-700')) {
-                        icon.classList.replace('text-night-700', 'text-yellow-300');
-                    }
-                } else {
-                    icon.classList.replace('fa-sun', 'fa-moon');
-                    if (icon.classList.contains('text-yellow-300')) {
-                        icon.classList.replace('text-yellow-300', 'text-night-700');
-                    }
-                }
-                updateMonthPickerIcon();
-            }
-
-            function updateMonthPickerIcon() {
-                const picker = document.getElementById('monthPicker');
-                picker.classList.toggle('dark', document.documentElement.classList.contains('dark'));
-            }
-
-            function renderCalendar() {
-                const year = currentDisplayedDate.getFullYear();
-                const month = currentDisplayedDate.getMonth();
-                currentMonthDisplay.textContent = `${MONTH_NAMES[month]} ${year}`;
-                monthPicker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
-                const firstDayOfMonth = new Date(year, month, 1);
-                const lastDayOfMonth = new Date(year, month + 1, 0);
-                const daysInMonth = lastDayOfMonth.getDate();
-                const startingDayOfWeek = firstDayOfMonth.getDay();
-                calendarGrid.innerHTML = '';
-                for (let i = 0; i < startingDayOfWeek; i++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'day-cell empty h-12 md:h-16 rounded-lg';
-                    calendarGrid.appendChild(emptyCell);
-                }
-                const today = new Date();
-                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dayCell = document.createElement('div');
-                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    dayCell.className = 'day-cell relative flex flex-col items-center justify-center h-12 md:h-16 rounded-lg bg-white dark:bg-night-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-night-700 transition';
-                    dayCell.setAttribute('data-date', dateString);
-                    if (dateString === todayString) {
-                        dayCell.classList.add('border', 'border-primary-500', 'border-2');
-                    }
-                    if (dateHasEntries(dateString)) {
-                        dayCell.classList.add('has-entry');
-                    }
-                    dayCell.innerHTML = `
-                        <span class="text-sm font-medium">${day}</span>
-                    `;
-                    dayCell.addEventListener('click', () => {
-                        document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('bg-primary-100', 'dark:bg-primary-800'));
-                        dayCell.classList.add('bg-primary-100', 'dark:bg-primary-800');
-                        selectedDate = new Date(year, month, day);
-                        showTimeSlots(selectedDate);
-                    });
-                    calendarGrid.appendChild(dayCell);
-                }
-            }
-
-            monthDropdown.addEventListener('click', () => {
-                const isHidden = monthDropdownMenu.classList.toggle('hidden');
-                monthDropdown.setAttribute('aria-expanded', !isHidden);
-            });
-
-            monthPicker.addEventListener('change', (e) => {
-                const [year, month] = e.target.value.split('-');
-                currentDisplayedDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-                renderCalendar();
-                monthDropdownMenu.classList.add('hidden');
-                monthDropdown.setAttribute('aria-expanded', false);
-            });
-
-            prevMonthButton.addEventListener('click', () => {
-                currentDisplayedDate.setDate(1);
-                currentDisplayedDate.setMonth(currentDisplayedDate.getMonth() - 1);
-                renderCalendar();
-            });
-
-            nextMonthButton.addEventListener('click', () => {
-                currentDisplayedDate.setDate(1);
-                currentDisplayedDate.setMonth(currentDisplayedDate.getMonth() + 1);
-                renderCalendar();
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!monthDropdown.contains(e.target) && !monthDropdownMenu.contains(e.target)) {
-                    monthDropdownMenu.classList.add('hidden');
-                    monthDropdown.setAttribute('aria-expanded', false);
-                }
-            });
-
-            function showTimeSlots(date) {
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                selectedDateTitle.textContent = `Cycles du ${date.toLocaleDateString('fr-FR', options)}`;
-                const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                const dateEntries = loadEntries()[dateString] || {};
-                timeSlotsContainer.querySelectorAll('.time-slot').forEach(slotElement => {
-                    const slotKey = slotElement.getAttribute('data-slot-key');
-                    const entryContentDiv = slotElement.querySelector('.entry-content');
-                    const entry = dateEntries[slotKey];
-                    entryContentDiv.innerHTML = '';
-                    if (entry && (entry.text || entry.url)) {
-                        if (entry.text) {
-                            const textPreview = entry.text.split('\n')[0].substring(0, 50) + (entry.text.length > 50 || entry.text.includes('\n') ? '...' : '');
-                            entryContentDiv.innerHTML += `<p class="truncate font-semibold">${escapeHTML(textPreview)}</p>`;
-                        }
-                        if (entry.url) {
-                            entryContentDiv.innerHTML += `<p class="text-primary-600 dark:text-primary-400 text-xs block truncate">URL enregistrée</p>`;
-                        }
-                    } else {
-                        entryContentDiv.innerHTML = '<p class="truncate text-night-600 dark:text-gray-400 italic">Aucune entrée</p>';
-                    }
-                    const plElement = slotElement.querySelector('.pl-display');
-                    if (plElement) {
-                        plElement.remove();
-                    }
-                    if (entry && entry.pl !== undefined) {
-                        const plDisplay = document.createElement('span');
-                        plDisplay.textContent = `$${entry.pl}`;
-                        plDisplay.style.color = '#a7c957';
-                        plDisplay.className = 'pl-display text-lg text-right font-medium ml-4';
-                        slotElement.querySelector('h3').appendChild(plDisplay);
-                    }
-                    const assetElement = slotElement.querySelector('.asset-display');
-                    if (assetElement) {
-                        assetElement.remove();
-                    }
-                    if (entry && entry.asset) {
-                        const assetDisplay = document.createElement('span');
-                        assetDisplay.textContent = entry.asset;
-                        assetDisplay.style.color = '#f4d35e';
-                        assetDisplay.className = 'asset-display text-lg font-medium ml-4';
-                        slotElement.querySelector('h3').appendChild(assetDisplay);
-                    }
-                });
-                timeSlotsSection.classList.remove('hidden');
-                setTimeout(() => {
-                    timeSlotsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 50);
-            }
-
-            closeTimeSlotsButton.addEventListener('click', () => {
-                timeSlotsSection.classList.add('hidden');
-                selectedDate = null;
-                document.querySelectorAll('.day-cell').forEach(cell => cell.classList.remove('bg-primary-100', 'dark:bg-primary-800'));
-            });
-
-            timeSlotsContainer.querySelectorAll('.time-slot').forEach(slotElement => {
-                slotElement.addEventListener('click', (e) => {
-                    const slotKey = slotElement.getAttribute('data-slot-key');
-                    if (!selectedDate) return;
-                    const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-                    const entry = getEntry(dateString, slotKey);
-                    if (!e.target.closest('.edit-slot') && entry) {
-                        showEntryDetails(dateString, slotKey, slotElement.querySelector('h3').textContent);
-                    } else if (!e.target.closest('.edit-slot') && !entry) {
-                        openEntryModal(slotElement);
-                    }
-                });
-                const editButton = slotElement.querySelector('.edit-slot');
-                if (editButton) {
-                    editButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openEntryModal(slotElement);
-                    });
-                }
-            });
-
-            function showEntryDetails(dateString, slotKey, timeRange) {
-                const entry = getEntry(dateString, slotKey);
-                const date = new Date(dateString);
-                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                displayModalTitle.textContent = `Entrée pour ${timeRange} du ${date.toLocaleDateString('fr-FR', dateOptions)}`;
-                displayModalUrlContainer.classList.add('hidden');
-                displayModalNotesContainer.classList.add('hidden');
-                displayModalEmpty.classList.add('hidden');
-                displayModalUrlError.classList.add('hidden');
-
-                let hasContent = false;
-
-                if (entry) {
-                    if (entry.asset) {
-                        displayModalNotesContainer.classList.remove('hidden');
-                        displayModalNotes.innerHTML = `<span style="color: #f4d35e;">Actif: ${escapeHTML(entry.asset)}</span>`;
-                        hasContent = true;
-                    }
-                    if (entry.pl !== undefined) {
-                        displayModalNotesContainer.classList.remove('hidden');
-                        displayModalNotes.innerHTML += `${entry.asset ? '<br>' : ''}<span style="color: #a7c957;">P&L: $${entry.pl}</span>`;
-                        hasContent = true;
-                    }
-                    if (entry.url) {
-                        displayModalUrlContainer.classList.remove('hidden');
-                        try {
-                            const url = new URL(entry.url);
-                            displayModalUrl.href = escapeHTML(entry.url);
-                            displayModalUrl.textContent = escapeHTML(entry.url);
-                        } catch (e) {
-                            displayModalUrl.href = '#';
-                            displayModalUrl.textContent = escapeHTML(entry.url);
-                            displayModalUrlError.classList.remove('hidden');
-                        }
-                        hasContent = true;
-                    }
-                    if (entry.text) {
-                        displayModalNotesContainer.classList.remove('hidden');
-                        displayModalNotes.innerHTML += `${(entry.asset || entry.pl !== undefined) ? '<br>' : ''}${escapeHTML(entry.text)}`;
-                        hasContent = true;
-                    }
-                }
-
-                if (!hasContent) {
-                    displayModalEmpty.classList.remove('hidden');
-                }
-
-                displayModal.classList.remove('hidden');
-            }
-
-            function openEntryModal(timeSlotElement) {
-                const slotKey = timeSlotElement.getAttribute('data-slot-key');
-                const timeRange = timeSlotElement.querySelector('h3').textContent;
-                if (!selectedDate) {
-                    console.error("No date selected for editing time slot.");
-                    return;
-                }
-                const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-                editingTimeSlotKey = slotKey;
-                const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-                modalTitle.textContent = `Entrée pour le cycle ${timeRange} du ${selectedDate.toLocaleDateString('fr-FR', dateOptions)}`;
-                const existingEntry = getEntry(dateString, slotKey);
-                if (existingEntry) {
-                    entryTextarea.value = existingEntry.text || '';
-                    entryUrlInput.value = existingEntry.url || '';
-                    entryAssetInput.value = existingEntry.asset || '';
-                    entryPLInput.value = existingEntry.pl !== undefined ? existingEntry.pl : '';
-                    deleteEntryButton.classList.remove('hidden');
-                } else {
-                    entryTextarea.value = '';
-                    entryUrlInput.value = '';
-                    entryAssetInput.value = '';
-                    entryPLInput.value = '';
-                    deleteEntryButton.classList.add('hidden');
-                }
-                entryModal.classList.remove('hidden');
-                entryTextarea.focus();
-            }
-
-            function closeEntryModal() {
-                entryModal.classList.add('hidden');
-                entryTextarea.value = '';
-                entryUrlInput.value = '';
-                entryAssetInput.value = '';
-                entryPLInput.value = '';
-                editingTimeSlotKey = null;
-                deleteEntryButton.classList.add('hidden');
-            }
-
-            closeModalButton.addEventListener('click', closeEntryModal);
-            cancelEntryButton.addEventListener('click', closeEntryModal);
-
-            saveEntryButton.addEventListener('click', () => {
-                if (!selectedDate || !editingTimeSlotKey) {
-                    console.error("Save called without selected date or time slot key.");
-                    closeEntryModal();
-                    return;
-                }
-                const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-                const entryText = entryTextarea.value.trim();
-                const entryUrl = entryUrlInput.value.trim();
-                const entryAsset = entryAssetInput.value.trim();
-                const entryPL = entryPLInput.value !== '' ? parseFloat(entryPLInput.value) : undefined;
-                setEntry(dateString, editingTimeSlotKey, { text: entryText, url: entryUrl, asset: entryAsset, pl: entryPL });
-                showTimeSlots(selectedDate);
-                renderCalendar();
-                closeEntryModal();
-            });
-
-            deleteEntryButton.addEventListener('click', () => {
-                if (!selectedDate || !editingTimeSlotKey) {
-                    console.error("Delete called without selected date or time slot key.");
-                    closeEntryModal();
-                    return;
-                }
-                const dateString = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
-                setEntry(dateString, editingTimeSlotKey, null);
-                showTimeSlots(selectedDate);
-                renderCalendar();
-                closeEntryModal();
-            });
-
-            closeDisplayModalButton.addEventListener('click', () => {
-                displayModal.classList.add('hidden');
-            });
-
-            closeDisplayModalIcon.addEventListener('click', () => {
-                displayModal.classList.add('hidden');
-            });
-
-            exportDataButton.addEventListener('click', () => {
-                const entries = loadEntries();
-                const dataStr = JSON.stringify(entries, null, 2);
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `journal_entries_${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-
-            importDataButton.addEventListener('click', () => {
-                importFileInput.click();
-            });
-
-            importFileInput.addEventListener('change', (e) => {
+            fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
                         const importedData = JSON.parse(event.target.result);
-                        const currentData = loadEntries();
-                        const mergedData = { ...currentData, ...importedData };
-                        for (const date in mergedData) {
-                            if (currentData[date] && importedData[date]) {
-                                mergedData[date] = { ...currentData[date], ...importedData[date] };
+                        if (Array.isArray(importedData)) {
+                            // Ancien format: juste entries
+                            entries = importedData;
+                            alert('Data imported successfully! (entries only)');
+                        } else if (importedData.entries && Array.isArray(importedData.entries)) {
+                            entries = importedData.entries;
+                            if (Array.isArray(importedData.EconCal)) {
+                                economicEvents = importedData.EconCal;
+                                alert('Data imported successfully! (entries + economic events)');
+                            } else {
+                                alert('Data imported successfully! (entries only, economic events unchanged)');
                             }
+                        } else {
+                            alert('Invalid data format. Please import a valid JSON file.');
+                            return;
                         }
-                        saveEntries(mergedData);
-                        if (selectedDate) {
-                            showTimeSlots(selectedDate);
-                        }
+                        localStorage.setItem('priceActionJournal', JSON.stringify(entries));
+                        localStorage.setItem('economicEvents', JSON.stringify(economicEvents));
+                        renderEntries();
+                        updateTagFilters();
                         renderCalendar();
-                        alert('Données importées avec succès.');
+                        renderEventsForDate(selectedDate);
                     } catch (error) {
-                        console.error('Erreur lors de l\'importation des données:', error);
-                        alert('Erreur lors de l\'importation des données. Veuillez vérifier le format du fichier.');
+                        alert('Error parsing JSON file. Please check the file format.');
+                        console.error(error);
                     }
-                    e.target.value = '';
                 };
                 reader.readAsText(file);
             });
 
-            deleteAllDataButton.addEventListener('click', () => {
-                if (confirm('Êtes-vous sûr de vouloir supprimer toutes les données ? Cette action est irréversible.')) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    if (selectedDate) {
-                        showTimeSlots(selectedDate);
-                    }
-                    renderCalendar();
-                    alert('Toutes les données ont été supprimées.');
+            exportBtn.addEventListener('click', () => {
+                if (entries.length === 0 && economicEvents.length === 0) {
+                    alert('No entries or economic events to export.');
+                    return;
                 }
+                const dataToExport = {
+                    entries: entries,
+                    EconCal: economicEvents
+                };
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+                const exportFileDefaultName = `price-action-journal-${new Date().toISOString().slice(0, 10)}.json`;
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            });
+        }
+
+        // Set default date and time for new entries
+        function setDefaultDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('entryDateTime').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Set session based on current hour (local time)
+            const hour = now.getHours();
+            let session = '';
+            if (hour >= 18 || hour < 0) {
+                session = 'C1';
+            } else if (hour >= 0 && hour < 6) {
+                session = 'C2';
+            } else if (hour >= 6 && hour < 12) {
+                session = 'C3';
+            } else {
+                session = 'C4';
+            }
+            document.getElementById('entrySession').value = session;
+        }
+
+        // New Entry Modal
+        newEntryBtn.addEventListener('click', () => {
+            currentEditingId = null;
+            entryForm.reset();
+            tagsContainer.innerHTML = '';
+
+            // Reset chart URLs and previews
+            document.getElementById('entryH1ImageUrl').value = '';
+            document.getElementById('entryM15ImageUrl').value = '';
+            document.getElementById('entryM5ImageUrl').value = '';
+            document.getElementById('entryH1Notes').value = '';
+            document.getElementById('entryM15Notes').value = '';
+            document.getElementById('entryM5Notes').value = '';
+            document.getElementById('h1-preview-container').innerHTML = '<p class="text-gray-500 text-sm">H1 chart preview will appear here</p>';
+            document.getElementById('m15-preview-container').innerHTML = '<p class="text-gray-500 text-sm">M15 chart preview will appear here</p>';
+            document.getElementById('m5-preview-container').innerHTML = '<p class="text-gray-500 text-sm">M5/M2 chart preview will appear here</p>';
+
+            // Set default date/time and session
+            setDefaultDateTime();
+
+            // Show the modal
+            entryModal.classList.remove('hidden');
+        });
+
+        // Close Modal
+        closeModal.addEventListener('click', () => {
+            entryModal.classList.add('hidden');
+        });
+
+        cancelEntry.addEventListener('click', () => {
+            entryModal.classList.add('hidden');
+        });
+
+        // Close View Modal
+        closeViewModal.addEventListener('click', () => {
+            viewEntryModal.classList.add('hidden');
+        });
+
+        // Close Event Modal
+        closeEventModal.addEventListener('click', () => {
+            eventModal.classList.add('hidden');
+        });
+
+        cancelEvent.addEventListener('click', () => {
+            eventModal.classList.add('hidden');
+        });
+
+        // Listen to date filter changes
+        startDateFilter.addEventListener('change', () => {
+            activeFilters.startDate = startDateFilter.value ? new Date(startDateFilter.value) : null;
+        });
+        endDateFilter.addEventListener('change', () => {
+            activeFilters.endDate = endDateFilter.value ? new Date(endDateFilter.value) : null;
+        });
+
+        // Tag Input Functionality
+        tagInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && tagInput.value.trim() !== '') {
+                e.preventDefault();
+                addTag(tagInput.value.trim());
+                tagInput.value = '';
+            }
+        });
+
+        function addTag(tagText) {
+            if (!tagsContainer.querySelector(`[data-tag="${tagText}"]`)) {
+                const tag = document.createElement('div');
+                tag.className = 'tag bg-dark-700 text-gray-200 px-2 py-1 rounded text-sm flex items-center';
+                tag.dataset.tag = tagText;
+
+                tag.innerHTML = `
+                    ${tagText}
+                    <span class="tag-remove ml-1 cursor-pointer" onclick="removeTag(this)">
+                        <i class="fas fa-times text-xs"></i>
+                    </span>
+                `;
+
+                tagsContainer.appendChild(tag);
+            }
+        }
+
+        function removeTag(element) {
+            const tag = element.closest('.tag');
+            tag.remove();
+        }
+
+        // Save Entry
+        entryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const dateTime = document.getElementById('entryDateTime').value; // valeur brute, sans conversion
+            const market = document.getElementById('entryMarket').value;
+            const session = document.getElementById('entrySession').value;
+            const symbol = document.getElementById('entrySymbol').value;
+            const title = document.getElementById('entryTitle').value;
+            const notes = document.getElementById('entryNotes').value;
+            const h1ImageUrl = document.getElementById('entryH1ImageUrl').value;
+            const m15ImageUrl = document.getElementById('entryM15ImageUrl').value;
+            const m5ImageUrl = document.getElementById('entryM5ImageUrl').value;
+            const h1Notes = document.getElementById('entryH1Notes').value;
+            const m15Notes = document.getElementById('entryM15Notes').value;
+            const m5Notes = document.getElementById('entryM5Notes').value;
+
+            const tags = Array.from(tagsContainer.querySelectorAll('.tag')).map(tag => tag.dataset.tag);
+
+            const entry = {
+                id: currentEditingId || Date.now().toString(),
+                dateTime, // stocke la valeur brute
+                market,
+                session,
+                symbol,
+                title,
+                notes,
+                h1ImageUrl,
+                m15ImageUrl,
+                m5ImageUrl,
+                h1Notes,
+                m15Notes,
+                m5Notes,
+                tags
+            };
+
+            if (currentEditingId) {
+                // Update existing entry
+                const index = entries.findIndex(e => e.id === currentEditingId);
+                if (index !== -1) {
+                    entries[index] = entry;
+                }
+            } else {
+                // Add new entry
+                entries.unshift(entry);
+            }
+
+            // Save to localStorage
+            localStorage.setItem('priceActionJournal', JSON.stringify(entries));
+
+            // Update UI
+            renderEntries();
+            updateTagFilters();
+
+            // Close modal
+            entryModal.classList.add('hidden');
+        });
+
+        // Render Entries
+        function renderEntries(filteredEntries = null) {
+            const sessionBgColors = { C1: '#a3a3a3', C2: '#fb7185', C3: '#22c55e', C4: '#3b82f6', Analysis: '#fb923c' };
+            let entriesToRender;
+
+            // Détecter si un filtre est actif
+            const filtersActive = !!(
+                activeFilters.session ||
+                activeFilters.market ||
+                (activeFilters.tags && activeFilters.tags.length > 0) ||
+                activeFilters.startDate ||
+                activeFilters.endDate
+            );
+
+            if (filteredEntries) {
+                entriesToRender = filteredEntries;
+            } else if (!filtersActive) {
+                // Aucun filtre actif : n'afficher que les entrées du jour
+                const today = new Date();
+                entriesToRender = entries.filter(entry => {
+                    if (!entry.dateTime) return false;
+                    const entryDate = new Date(entry.dateTime);
+                    return entryDate.getFullYear() === today.getFullYear() &&
+                        entryDate.getMonth() === today.getMonth() &&
+                        entryDate.getDate() === today.getDate();
+                });
+            } else {
+                // Filtres actifs : logique normale
+                entriesToRender = filterEntries();
+            }
+
+            if (entriesToRender.length === 0) {
+                entriesContainer.innerHTML = noEntriesMessage.outerHTML;
+                document.getElementById('entryCount').textContent = '0 entries';
+                return;
+            }
+
+            entriesContainer.innerHTML = '';
+            document.getElementById('entryCount').textContent = `${entriesToRender.length} ${entriesToRender.length === 1 ? 'entry' : 'entries'}`;
+
+            entriesToRender.forEach(entry => {
+                const entryElement = document.createElement('div');
+                entryElement.className = 'journal-entry bg-dark-800 p-4 rounded-lg shadow-sm border border-dark-700 cursor-pointer fade-in';
+                entryElement.dataset.id = entry.id;
+
+                const formattedDate = formatDateTime(entry.dateTime);
+
+                const marketIcon = getMarketIcon(entry.market);
+
+                entryElement.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium text-white">${entry.title}</h3>
+                        <span class="text-xs text-gray-400">${formattedDate}</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-400 mb-2">
+                        <span class="mr-3">${marketIcon} ${entry.market.charAt(0).toUpperCase() + entry.market.slice(1)}</span>
+                        <span class="mr-3">${entry.symbol}</span>
+                        <span class="bg-dark-700 px-2 py-1 rounded text-xs" style="background:${sessionBgColors[entry.session] || '#94a3b8'};color:#fff;">
+                            ${entry.session === 'Analysis' ? 'An' : entry.session}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-300 mb-3 line-clamp-2">${entry.notes}</div>
+                    ${entry.h1ImageUrl || entry.m15ImageUrl || entry.m5ImageUrl ? `
+                        <div class="chart-grid mb-3">
+                            <div class="chart-container">
+                                <div class="chart-preview" onclick="event.stopPropagation(); openChartUrlFromEntry('${entry.id}', 'h1')">
+                                    ${entry.h1ImageUrl ?
+                            `<img src=\"${entry.h1ImageUrl}\" alt=\"H1 chart\" class=\"max-h-full max-w-full object-contain\">` :
+                            `<p class=\"text-gray-500 text-sm\">No H1 chart</p>`}
+                                </div>
+                                <div class="chart-note">${entry.h1Notes || ''}</div>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-preview" onclick="event.stopPropagation(); openChartUrlFromEntry('${entry.id}', 'm15')">
+                                    ${entry.m15ImageUrl ?
+                            `<img src=\"${entry.m15ImageUrl}\" alt=\"M15 chart\" class=\"max-h-full max-w-full object-contain\">` :
+                            `<p class=\"text-gray-500 text-sm\">No M15 chart</p>`}
+                                </div>
+                                <div class="chart-note">${entry.m15Notes || ''}</div>
+                            </div>
+                            <div class="chart-container">
+                                <div class="chart-preview" onclick="event.stopPropagation(); openChartUrlFromEntry('${entry.id}', 'm5')">
+                                    ${entry.m5ImageUrl ?
+                            `<img src=\"${entry.m5ImageUrl}\" alt=\"M5/M2 chart\" class=\"max-h-full max-w-full object-contain\">` :
+                            `<p class=\"text-gray-500 text-sm\">No M5/M2 chart</p>`}
+                                </div>
+                                <div class="chart-note">${entry.m5Notes || ''}</div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="flex flex-wrap gap-2">
+                        ${entry.tags.map(tag => `
+                            <span class="bg-dark-700 text-gray-300 px-2 py-1 rounded text-xs">${tag}</span>
+                        `).join('')}
+                    </div>
+                `;
+
+                entryElement.addEventListener('click', () => viewEntry(entry.id));
+                entriesContainer.appendChild(entryElement);
+            });
+        }
+
+        // Open chart URL from view modal
+        function openChartUrl(chartType) {
+            const entry = entries.find(e => e.id === currentEditingId);
+            if (!entry) return;
+
+            const url = entry[`${chartType}ImageUrl`];
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        // Open chart URL from entry list
+        function openChartUrlFromEntry(entryId, chartType) {
+            const entry = entries.find(e => e.id === entryId);
+            if (!entry) return;
+
+            const url = entry[`${chartType}ImageUrl`];
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        // Filter entries based on active filters
+        function filterEntries() {
+            return entries.filter(entry => {
+                // Filter by date range if set
+                if (activeFilters.startDate) {
+                    const entryDate = new Date(entry.dateTime);
+                    if (entryDate < activeFilters.startDate) {
+                        return false;
+                    }
+                }
+                if (activeFilters.endDate) {
+                    const entryDate = new Date(entry.dateTime);
+                    // Include the whole end day
+                    const endDate = new Date(activeFilters.endDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    if (entryDate > endDate) {
+                        return false;
+                    }
+                }
+                // Filter by session if set
+                if (activeFilters.session && entry.session !== activeFilters.session) {
+                    return false;
+                }
+
+                // Filter by market if set
+                if (activeFilters.market && entry.market !== activeFilters.market) {
+                    return false;
+                }
+
+                // Filter by tags if any are selected
+                if (activeFilters.tags.length > 0) {
+                    const hasAllTags = activeFilters.tags.every(tag =>
+                        entry.tags.includes(tag)
+                    );
+                    if (!hasAllTags) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        function getMarketIcon(market) {
+            const icons = {
+                forex: 'fas fa-globe-europe',
+                stocks: 'fas fa-chart-bar',
+                crypto: 'fab fa-bitcoin',
+                indices: 'fas fa-chart-area',
+                commodities: 'fas fa-gas-pump'
+            };
+            return `<i class="${icons[market] || 'fas fa-chart-line'} text-blue-400"></i>`;
+        }
+
+        // View Entry
+        function viewEntry(id) {
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
+
+            currentEditingId = id;
+
+            const formattedDate = formatDateTime(entry.dateTime);
+
+            document.getElementById('viewEntryTitle').textContent = entry.title;
+            document.getElementById('viewEntryDateTime').textContent = formattedDate;
+            document.getElementById('viewEntryMarket').innerHTML = `<span style="font-weight:bold;">${entry.market.charAt(0).toUpperCase() + entry.market.slice(1)}</span>`;
+
+            const sessionColors = { C1: '#a3a3a3', C2: '#fb7185', C3: '#22c55e', C4: '#3b82f6', Analysis: '#fb923c' };
+            const session = entry.session;
+            const sessionColor = sessionColors[session] || '#94a3b8';
+            document.getElementById('viewEntrySession').innerHTML = `<span style="background:${sessionColor};color:#fff;padding:0.2em 0.7em;border-radius:0.5em;">${session === 'Analysis' ? 'An' : session}</span>`;
+
+            document.getElementById('viewEntrySymbol').textContent = entry.symbol;
+            document.getElementById('viewEntryNotes').textContent = entry.notes;
+
+            // Set up chart images and notes
+            const h1Container = document.getElementById('view-h1-preview-container');
+            const m15Container = document.getElementById('view-m15-preview-container');
+            const m5Container = document.getElementById('view-m5-preview-container');
+            const h1Note = document.getElementById('view-h1-note');
+            const m15Note = document.getElementById('view-m15-note');
+            const m5Note = document.getElementById('view-m5-note');
+
+            h1Container.innerHTML = entry.h1ImageUrl
+                ? `<img src="${entry.h1ImageUrl}" alt="H1 chart" class="max-h-full max-w-full object-contain">`
+                : '<p class="text-gray-500 text-sm">No H1 chart available</p>';
+            h1Note.textContent = entry.h1Notes || '';
+
+            m15Container.innerHTML = entry.m15ImageUrl
+                ? `<img src="${entry.m15ImageUrl}" alt="M15 chart" class="max-h-full max-w-full object-contain">`
+                : '<p class="text-gray-500 text-sm">No M15 chart available</p>';
+            m15Note.textContent = entry.m15Notes || '';
+
+            m5Container.innerHTML = entry.m5ImageUrl
+                ? `<img src="${entry.m5ImageUrl}" alt="M5/M2 chart" class="max-h-full max-w-full object-contain">`
+                : '<p class="text-gray-500 text-sm">No M5/M2 chart available</p>';
+            m5Note.textContent = entry.m5Notes || '';
+
+            // Set up tags
+            const tagsContainer = document.getElementById('viewEntryTags');
+            tagsContainer.innerHTML = '';
+
+            entry.tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'bg-dark-700 text-gray-300 px-2 py-1 rounded text-xs';
+                tagElement.textContent = tag;
+                tagsContainer.appendChild(tagElement);
             });
 
-            setInitialThemeIcon();
-            renderCalendar();
+            viewEntryModal.classList.remove('hidden');
+        }
+
+        // Delete Entry
+        deleteEntryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                entries = entries.filter(e => e.id !== currentEditingId);
+                localStorage.setItem('priceActionJournal', JSON.stringify(entries));
+                renderEntries();
+                updateTagFilters();
+                viewEntryModal.classList.add('hidden');
+            }
         });
+
+        // Edit Entry
+        editEntryBtn.addEventListener('click', () => {
+            const entry = entries.find(e => e.id === currentEditingId);
+            if (!entry) return;
+
+            viewEntryModal.classList.add('hidden');
+
+            // Fill the form with entry data
+            document.getElementById('entryDateTime').value = entry.dateTime; // valeur brute, sans conversion
+            document.getElementById('entryMarket').value = entry.market;
+            document.getElementById('entrySession').value = entry.session;
+            document.getElementById('entrySymbol').value = entry.symbol;
+            document.getElementById('entryTitle').value = entry.title;
+            document.getElementById('entryNotes').value = entry.notes;
+            document.getElementById('entryH1ImageUrl').value = entry.h1ImageUrl || '';
+            document.getElementById('entryM15ImageUrl').value = entry.m15ImageUrl || '';
+            document.getElementById('entryM5ImageUrl').value = entry.m5ImageUrl || '';
+            document.getElementById('entryH1Notes').value = entry.h1Notes || '';
+            document.getElementById('entryM15Notes').value = entry.m15Notes || '';
+            document.getElementById('entryM5Notes').value = entry.m5Notes || '';
+
+            // Update image previews
+            updateImagePreview(entry.h1ImageUrl, 'h1-preview-container');
+            updateImagePreview(entry.m15ImageUrl, 'm15-preview-container');
+            updateImagePreview(entry.m5ImageUrl, 'm5-preview-container');
+
+            // Add tags
+            tagsContainer.innerHTML = '';
+            entry.tags.forEach(tag => addTag(tag));
+
+            // Show the edit modal
+            entryModal.classList.remove('hidden');
+        });
+
+        // Update tag filters in sidebar
+        function updateTagFilters() {
+            // Collect all unique tags from entries
+            allTags = [...new Set(entries.flatMap(entry => entry.tags))];
+
+            tagFilters.innerHTML = '';
+
+            if (allTags.length === 0) {
+                tagFilters.innerHTML = '<p class="text-sm text-gray-500">No tags yet</p>';
+                return;
+            }
+
+            allTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = `cursor-pointer ${activeFilters.tags.includes(tag) ? 'bg-blue-500 text-white' : 'bg-dark-700 text-gray-300'} px-2 py-1 rounded text-xs`;
+                tagElement.textContent = tag;
+                tagElement.dataset.tag = tag;
+                tagElement.addEventListener('click', () => toggleTagFilter(tag));
+                tagFilters.appendChild(tagElement);
+            });
+        }
+
+        // Toggle tag filter
+        function toggleTagFilter(tag) {
+            const index = activeFilters.tags.indexOf(tag);
+            if (index === -1) {
+                activeFilters.tags.push(tag);
+            } else {
+                activeFilters.tags.splice(index, 1);
+            }
+
+            updateTagFilters();
+            renderEntries();
+        }
+
+        // Clear all filters
+        clearFilters.addEventListener('click', () => {
+            // Reset all filters
+            activeFilters = {
+                session: null,
+                market: null,
+                tags: [],
+                startDate: null,
+                endDate: null
+            };
+
+            // Reset UI elements
+            document.querySelector('.dropdown-item[data-value=""]').click();
+            startDateFilter.value = '';
+            endDateFilter.value = '';
+
+            // Update and render
+            updateTagFilters();
+            renderEntries();
+        });
+
+        // Make removeTag function available globally
+        window.removeTag = removeTag;
+        window.openChartUrlFromEntry = openChartUrlFromEntry;
+
+        // Dropdown for Market in New Entry Modal
+        const entryMarketDropdown = document.getElementById('entryMarketDropdown');
+        const entryMarketMenu = document.getElementById('entryMarketMenu');
+        const entryMarketDisplay = document.getElementById('entryMarketDisplay');
+        const entryMarketInput = document.getElementById('entryMarket');
+
+        entryMarketDropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+            entryMarketMenu.classList.toggle('hidden');
+            entryMarketDropdown.classList.toggle('open');
+        });
+        entryMarketMenu.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', function () {
+                entryMarketDisplay.innerHTML = item.innerHTML;
+                entryMarketInput.value = item.dataset.value;
+                entryMarketMenu.classList.add('hidden');
+                entryMarketDropdown.classList.remove('open');
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!entryMarketDropdown.contains(e.target)) {
+                entryMarketMenu.classList.add('hidden');
+                entryMarketDropdown.classList.remove('open');
+            }
+        });
+
+        // Dropdown for Session in New Entry Modal
+        const entrySessionDropdown = document.getElementById('entrySessionDropdown');
+        const entrySessionMenu = document.getElementById('entrySessionMenu');
+        const entrySessionDisplay = document.getElementById('entrySessionDisplay');
+        const entrySessionInput = document.getElementById('entrySession');
+
+        entrySessionDropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+            entrySessionMenu.classList.toggle('hidden');
+            entrySessionDropdown.classList.toggle('open');
+        });
+        entrySessionMenu.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', function () {
+                entrySessionDisplay.textContent = item.textContent;
+                entrySessionInput.value = item.dataset.value;
+                entrySessionMenu.classList.add('hidden');
+                entrySessionDropdown.classList.remove('open');
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!entrySessionDropdown.contains(e.target)) {
+                entrySessionMenu.classList.add('hidden');
+                entrySessionDropdown.classList.remove('open');
+            }
+        });
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            const [datePart, timePart] = dateTimeStr.split('T');
+            if (!datePart || !timePart) return dateTimeStr;
+            const [year, month, day] = datePart.split('-');
+            const [hour, minute] = timePart.split(':');
+            return `${day}/${month}/${year.slice(2)} - ${hour}:${minute}`;
+        }
     </script>
+
+    <footer
+        style="position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(15,23,42,0.97);color:#94a3b8;font-size:0.85rem;font-family:Inter,sans-serif;text-align:center;padding:0.5rem 0;letter-spacing:0.03em;display:flex;justify-content:center;align-items:center;gap:1.5rem;">
+        <span style="display:flex;align-items:center;gap:0.4em;">
+            <i class="fa-solid fa-copyright"></i> 2025 Powered by <span
+                style="background:linear-gradient(90deg,#3b82f6,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-fill-color:transparent;font-weight:400;">3dr!ves</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:1em;">
+            <a href="#" target="_blank" aria-label="Discord" class="footer-icon"><i
+                    class="fab fa-discord fa-lg"></i></a>
+            <a href="#" target="_blank" aria-label="Twitter" class="footer-icon"><i
+                    class="fab fa-twitter fa-lg"></i></a>
+            <a href="#" target="_blank" aria-label="Telegram" class="footer-icon"><i
+                    class="fab fa-telegram fa-lg"></i></a>
+            <a href="#" target="_blank" aria-label="YouTube" class="footer-icon"><i
+                    class="fab fa-youtube fa-lg"></i></a>
+        </span>
+    </footer>
 </body>
 
 </html>
